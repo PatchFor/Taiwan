@@ -597,26 +597,82 @@
  .chip-link:hover{transform:translateY(-1px);}
  .chip-link.full{background:var(--primary-soft);color:var(--primary-dark);font-weight:700;}
 
- .bottom-section{margin-top:38px;display:flex;flex-direction:column;gap:12px;}
- .bottom-btn{
- display:flex;align-items:center;gap:16px;
- text-decoration:none;
- background:var(--surface);
- color:var(--ink);
- padding:16px 20px;
- border-radius:var(--radius);
- box-shadow:var(--shadow-sm);
- border:1px solid var(--border-light);
- transition:box-shadow var(--transition), transform var(--transition);
- cursor:pointer;
- font-family:inherit;
- font-size:inherit;
+ /* ---------- Floating quick-actions menu ---------- */
+ .fab-backdrop{
+ position:fixed;inset:0;
+ background:rgba(34,34,34,0.28);
+ z-index:80;
+ opacity:0;pointer-events:none;
+ transition:opacity .2s ease;
  }
- .bottom-btn:hover{box-shadow:var(--shadow-hover);transform:translateY(-1px);}
- .bottom-btn .mi{font-size:24px;color:var(--primary);}
- .bottom-btn-text{display:flex;flex-direction:column;}
- .bottom-btn-label{font-weight:600;font-size:15px;}
- .bottom-btn-sub{font-size:13px;color:var(--ink-secondary);}
+ .fab-backdrop.show{opacity:1;pointer-events:auto;}
+
+ .fab-wrap{
+ position:fixed;
+ right:max(20px, env(safe-area-inset-right));
+ bottom:max(20px, env(safe-area-inset-bottom));
+ z-index:90;
+ display:flex;flex-direction:column;align-items:flex-end;gap:14px;
+ }
+ .fab-menu{display:flex;flex-direction:column;align-items:flex-end;gap:12px;}
+ .fab-item{
+ display:flex;align-items:center;gap:12px;
+ text-decoration:none;font-family:inherit;
+ background:none;border:none;padding:0;cursor:pointer;
+ opacity:0;transform:translateY(10px) scale(0.92);
+ pointer-events:none;
+ transition:opacity .18s ease, transform .22s cubic-bezier(0.2,0,0,1);
+ }
+ .fab-wrap.open .fab-item{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+ .fab-wrap.open .fab-item:nth-child(1){transition-delay:.09s;}
+ .fab-wrap.open .fab-item:nth-child(2){transition-delay:.05s;}
+ .fab-wrap.open .fab-item:nth-child(3){transition-delay:0s;}
+ .fab-item-label{
+ background:var(--ink);color:#fff;
+ font-size:13px;font-weight:600;white-space:nowrap;
+ padding:8px 14px;border-radius:20px;
+ box-shadow:var(--shadow);
+ }
+ .fab-item-icon{
+ flex:0 0 auto;
+ width:48px;height:48px;border-radius:50%;
+ background:var(--surface);color:var(--primary);
+ display:flex;align-items:center;justify-content:center;
+ box-shadow:var(--shadow);border:1px solid var(--border-light);
+ transition:background var(--transition), transform var(--transition);
+ }
+ .fab-item-icon .mi{font-size:22px;}
+ .fab-item:hover .fab-item-icon{background:var(--primary-soft);transform:scale(1.06);}
+ .fab-item:hover .fab-item-label{background:var(--primary-dark);}
+
+ .fab-toggle{
+ position:relative;
+ width:60px;height:60px;border-radius:50%;
+ background:var(--primary);color:#fff;border:none;
+ display:flex;align-items:center;justify-content:center;
+ cursor:pointer;
+ box-shadow:0 10px 24px rgba(255,56,92,0.38), var(--shadow);
+ transition:background .2s ease, box-shadow .2s ease, transform .2s cubic-bezier(0.2,0,0,1);
+ }
+ .fab-toggle:hover{transform:scale(1.05);box-shadow:0 12px 28px rgba(255,56,92,0.46), var(--shadow-hover);}
+ .fab-toggle:active{transform:scale(0.95);}
+ .fab-wrap.open .fab-toggle{background:var(--ink);}
+ .fab-toggle .mi{
+ position:absolute;font-size:26px;
+ transition:opacity .2s ease, transform .25s cubic-bezier(0.2,0,0,1);
+ }
+ .fab-icon-menu{opacity:1;transform:rotate(0deg) scale(1);}
+ .fab-icon-close{opacity:0;transform:rotate(-90deg) scale(0.5);}
+ .fab-wrap.open .fab-icon-menu{opacity:0;transform:rotate(90deg) scale(0.5);}
+ .fab-wrap.open .fab-icon-close{opacity:1;transform:rotate(0deg) scale(1);}
+
+ @media (max-width:640px){
+ .fab-wrap{right:16px;bottom:16px;gap:12px;}
+ .fab-toggle{width:54px;height:54px;}
+ .fab-toggle .mi{font-size:24px;}
+ .fab-item-icon{width:44px;height:44px;}
+ .fab-item-label{font-size:12.5px;padding:7px 12px;}
+ }
 
  footer{
  margin-top:44px;text-align:center;
@@ -675,8 +731,6 @@
  #leafletMap{height:240px;}
  .route-visual{padding:14px 10px 4px;}
  .map-actions{padding:12px 10px 4px;}
-
- .bottom-section{margin-top:28px;}
 
  .expense-form{padding:0 16px 12px;gap:8px;}
  .expense-list{padding:0 16px;}
@@ -750,31 +804,29 @@
 
  <div class="card notes-card" id="notesCard"></div>
 
- <div class="bottom-section">
- <a class="bottom-btn" href="https://drive.google.com/drive/folders/18Oy-RVgZNmj9ZbnTXMsdXBN1idtdkJ7l?usp=sharing" target="_blank" rel="noopener">
- <span class="mi">photo_library</span>
- <span class="bottom-btn-text">
- <span class="bottom-btn-label">Photo Spots</span>
- <span class="bottom-btn-sub">Curated photo locations for this trip</span>
- </span>
+ <footer id="pageFooter"></footer>
+</div>
+
+<div class="fab-backdrop" id="fabBackdrop"></div>
+<div class="fab-wrap" id="fabWrap">
+ <div class="fab-menu">
+ <a class="fab-item" href="https://drive.google.com/drive/folders/18Oy-RVgZNmj9ZbnTXMsdXBN1idtdkJ7l?usp=sharing" target="_blank" rel="noopener">
+ <span class="fab-item-label">Photo Spots</span>
+ <span class="fab-item-icon"><span class="mi">photo_library</span></span>
  </a>
- <a class="bottom-btn" href="https://drive.google.com/drive/folders/1nCJuGbE9D7uFA9fI6BpJkW6NFuYY-jBl?usp=sharing" target="_blank" rel="noopener">
- <span class="mi">folder_open</span>
- <span class="bottom-btn-text">
- <span class="bottom-btn-label">All About Trip Taipei</span>
- <span class="bottom-btn-sub">Documents, references and resources</span>
- </span>
+ <a class="fab-item" href="https://drive.google.com/drive/folders/1nCJuGbE9D7uFA9fI6BpJkW6NFuYY-jBl?usp=sharing" target="_blank" rel="noopener">
+ <span class="fab-item-label">All About Trip Taipei</span>
+ <span class="fab-item-icon"><span class="mi">folder_open</span></span>
  </a>
- <button id="dayExpensesBtn" type="button" class="bottom-btn" style="border:none;">
- <span class="mi">payments</span>
- <span class="bottom-btn-text">
- <span class="bottom-btn-label">Expenses</span>
- <span class="bottom-btn-sub">Track and split trip expenses</span>
- </span>
+ <button id="dayExpensesBtn" type="button" class="fab-item">
+ <span class="fab-item-label">Expenses</span>
+ <span class="fab-item-icon"><span class="mi">payments</span></span>
  </button>
  </div>
-
- <footer id="pageFooter"></footer>
+ <button id="fabToggle" type="button" class="fab-toggle" aria-expanded="false" aria-label="Open quick actions menu">
+ <span class="mi fab-icon-menu">apps</span>
+ <span class="mi fab-icon-close">close</span>
+ </button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1845,6 +1897,28 @@ async function renderReportSummary(){
 
  section.innerHTML = html;
 }
+
+/* ================= Floating quick-actions menu ================= */
+const fabWrap = document.getElementById('fabWrap');
+const fabToggle = document.getElementById('fabToggle');
+const fabBackdrop = document.getElementById('fabBackdrop');
+
+function setFabOpen(open){
+ fabWrap.classList.toggle('open', open);
+ fabBackdrop.classList.toggle('show', open);
+ fabToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+fabToggle.addEventListener('click', () => {
+ setFabOpen(!fabWrap.classList.contains('open'));
+});
+fabBackdrop.addEventListener('click', () => setFabOpen(false));
+document.querySelectorAll('.fab-item').forEach(item => {
+ item.addEventListener('click', () => setFabOpen(false));
+});
+document.addEventListener('keydown', (ev) => {
+ if (ev.key === 'Escape') setFabOpen(false);
+});
 
 document.getElementById('dayExpensesBtn').addEventListener('click', async () => {
  const overlay = document.getElementById('reportOverlay');
