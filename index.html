@@ -109,6 +109,8 @@
  box-shadow:var(--shadow-sm);
  border-radius:0 0 20px 20px;
  }
+ .day-rail.is-stuck .day-pill{padding-bottom:10px;}
+ .day-rail.is-stuck .day-pill .route{display:none;}
  .day-pill{
  background:var(--surface);
  border-radius:24px;
@@ -470,6 +472,7 @@
  .expense-row .exp-name{font-weight:700;color:var(--primary-dark);flex:0 0 50px;}
  .expense-row .exp-item{flex:1;color:var(--ink);}
  .expense-row .exp-amount{font-weight:700;color:var(--primary-dark);white-space:nowrap;}
+ .exp-rate-flag{flex:0 0 auto;color:var(--secondary-dark);font-size:15px;cursor:help;}
  .expense-row .exp-payment{font-size:11px;color:var(--ink-secondary);flex:0 0 auto;}
  .expense-row .exp-del{
  background:none;border:none;color:var(--ink-secondary);cursor:pointer;font-size:15px;flex:0 0 auto;
@@ -527,6 +530,17 @@
  .report-day-tab.active{
  background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;
  }
+
+ .view-summary-mini-btn{
+ display:flex;align-items:center;justify-content:center;gap:6px;
+ margin:14px auto 2px;
+ background:none;border:1.5px solid var(--border);
+ color:var(--ink-secondary);font-weight:700;font-size:12.5px;
+ padding:8px 16px;border-radius:20px;cursor:pointer;
+ font-family:inherit;
+ transition:border-color .15s ease, color .15s ease;
+ }
+ .view-summary-mini-btn:hover{border-color:var(--primary);color:var(--primary-dark);}
 
  .export-excel-btn{
  display:block;width:100%;
@@ -864,6 +878,7 @@
 
  <div id="reportEntryView" class="report-body">
  <div id="reportEntrySection"></div>
+ <button id="viewSummaryMiniBtn" type="button" class="view-summary-mini-btn"><span class="mi mi-sm">bar_chart</span> View Trip Summary</button>
  </div>
 
  <div id="reportSummaryView" class="report-body" style="display:none;">
@@ -1726,6 +1741,7 @@ let cachedTwdToThbRate = null;
 let rateFetchedAt = 0;
 let rateFetchPromise = null;
 const RATE_REFRESH_MS = 10 * 60 * 1000; // keep the rate reasonably "live" for long sessions
+const FALLBACK_TWD_TO_THB_RATE = 1.05; // used only when the live rate can't be fetched
 
 function getTwdToThbRate(){
  const isStale = cachedTwdToThbRate === null || (Date.now() - rateFetchedAt) > RATE_REFRESH_MS;
@@ -1795,6 +1811,7 @@ function expenseRowsHtml(list, highlightIdx){
  <span class="exp-name">${e.name}</span>
  <span class="exp-item">${e.item}</span>
  <span class="exp-amount">${Number(e.amount).toLocaleString()} NT$</span>
+ ${e.rateNote ? `<span class="mi mi-sm exp-rate-flag" title="${e.rateNote}">info</span>` : ''}
  <span class="exp-payment">${e.payment}</span>
  <button class="exp-del" data-idx="${i}" title="Delete"><span class="mi mi-sm">delete</span></button>
  </div>
@@ -1929,14 +1946,16 @@ async function renderReportEntrySection(dayNumber){
  const raw = parseFloat(amountInput.value);
  if (!raw || raw <= 0){ rateNoteEl.textContent = ''; return; }
  if (cachedTwdToThbRate === null) rateNoteEl.textContent = 'Fetching exchange rate…';
- const rate = await getTwdToThbRate();
- if (!rate){ rateNoteEl.textContent = 'Fetching exchange rate…'; return; }
+ let rate = await getTwdToThbRate();
+ const isFallback = !rate;
+ if (isFallback) rate = FALLBACK_TWD_TO_THB_RATE;
+ const fallbackNote = isFallback ? ` (est. rate ${FALLBACK_TWD_TO_THB_RATE}, live rate unavailable)` : '';
  if (selectedCurrency === 'THB'){
  const ntd = raw / rate;
- rateNoteEl.textContent = `฿${raw.toLocaleString()} ≈ NT$${ntd.toLocaleString(undefined,{maximumFractionDigits:0})} · saved as NT$`;
+ rateNoteEl.textContent = `฿${raw.toLocaleString()} ≈ NT$${ntd.toLocaleString(undefined,{maximumFractionDigits:0})} · saved as NT$${fallbackNote}`;
  } else {
  const thb = raw * rate;
- rateNoteEl.textContent = `NT$${raw.toLocaleString()} ≈ ฿${thb.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+ rateNoteEl.textContent = `NT$${raw.toLocaleString()} ≈ ฿${thb.toLocaleString(undefined,{maximumFractionDigits:0})}${fallbackNote}`;
  }
  }
 
@@ -1977,15 +1996,16 @@ async function renderReportEntrySection(dayNumber){
  let amount = parseFloat(amountInput.value);
  const payment = document.getElementById('expPayment').value;
  if (!name || !item || !amount || !payment) return;
+ let rateNote = null;
  if (selectedCurrency === 'THB'){
- const rate = await getTwdToThbRate();
+ let rate = await getTwdToThbRate();
  if (!rate){
- setStatus('Exchange rate unavailable — switch to NT$ or try again', true);
- return;
+ rate = FALLBACK_TWD_TO_THB_RATE;
+ rateNote = `Converted from THB at an estimated rate of ${FALLBACK_TWD_TO_THB_RATE} (live exchange rate was unavailable)`;
  }
  amount = amount / rate;
  }
- list.push({ name, item, amount, payment });
+ list.push({ name, item, amount, payment, ...(rateNote ? { rateNote } : {}) });
  refreshListUI(list.length - 1);
  ev.target.reset();
  resetSegmented('payerSegmented', 'expName', PEOPLE[0]);
@@ -2208,6 +2228,7 @@ async function openSummaryView(){
 }
 
 document.getElementById('viewSummaryFabBtn').addEventListener('click', openSummaryView);
+document.getElementById('viewSummaryMiniBtn').addEventListener('click', openSummaryView);
 
 document.getElementById('reportCloseBtn').addEventListener('click', () => {
  document.getElementById('reportOverlay').style.display = 'none';
