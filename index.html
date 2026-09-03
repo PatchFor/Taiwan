@@ -128,22 +128,23 @@
  display:flex; align-items:center; margin-bottom:6px;
  }
  .day-pill .num{
- background:var(--primary);
- color:#fff;
+ background:var(--border);
+ color:var(--ink-secondary);
  font-weight:700;
- width:26px;height:26px;border-radius:50%;
+ width:auto;height:26px;padding:0 12px;border-radius:14px;
  display:flex;align-items:center;justify-content:center;
- font-size:13px;
+ font-size:11.5px;
  white-space:nowrap;
- transition:width .15s ease, border-radius .15s ease, padding .15s ease;
+ transition:background .15s ease, color .15s ease;
  }
  .day-pill.active .num{
  background:var(--primary-dark);
- width:auto;padding:0 12px;border-radius:14px;
- font-size:11.5px;font-weight:800;letter-spacing:0.02em;
+ color:#fff;
+ font-weight:800;letter-spacing:0.02em;
  }
- .pill-date-main{font-size:16px;font-weight:800;color:var(--ink);line-height:1.3;letter-spacing:-0.01em;}
- .pill-date-weekday{font-size:11.5px;font-weight:600;color:var(--ink-secondary);line-height:1.4;margin-top:2px;margin-bottom:8px;}
+ .pill-date-row{margin-bottom:8px;}
+ .pill-date-main{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-0.01em;}
+ .pill-date-weekday{font-size:12.5px;font-weight:600;color:var(--ink-secondary);margin-left:6px;}
  .day-pill .route{font-size:12.5px;color:var(--ink);line-height:1.5;overflow-wrap:break-word;}
  .day-pill.placeholder{
  display:flex;align-items:center;justify-content:center;
@@ -780,10 +781,10 @@
  .day-pill{padding:8px 5px;text-align:center;}
  .day-pill .pill-top{justify-content:center;margin-bottom:4px;}
  .day-pill .route{display:none;}
- .day-pill .num{width:20px;height:20px;font-size:10.5px;}
- .day-pill.active .num{padding:0 9px;font-size:9.5px;border-radius:11px;}
- .pill-date-main{font-size:12px;line-height:1.35;overflow-wrap:break-word;word-break:break-word;}
- .pill-date-weekday{font-size:9.5px;margin-top:2px;margin-bottom:3px;}
+ .day-pill .num{height:20px;padding:0 8px;font-size:9.5px;}
+ .pill-date-row{margin-bottom:2px;}
+ .pill-date-main{display:block;font-size:12px;line-height:1.35;overflow-wrap:break-word;word-break:break-word;}
+ .pill-date-weekday{display:block;font-size:9.5px;margin-left:0;margin-top:2px;}
 
  /* Sticky bar: only the selected day keeps its full detail once compacted */
  .day-rail.is-stuck .day-pill{padding:9px 6px;}
@@ -801,8 +802,7 @@
 
  .day-rail{margin-top:-4px;gap:6px;}
  .day-pill{padding:8px 3px;}
- .day-pill .num{width:16px;height:16px;font-size:9px;}
- .day-pill.active .num{padding:0 7px;font-size:8.5px;border-radius:10px;}
+ .day-pill .num{height:16px;padding:0 6px;font-size:8px;border-radius:9px;}
  .pill-date-main{font-size:10.5px;}
  .pill-date-weekday{font-size:8.5px;}
 
@@ -925,7 +925,7 @@ const tripData = [
  dayNumber: 1,
  expensesUrl: "https://docs.google.com/spreadsheets/d/1xXDdO5n5-8Hkeg27HuKcyH8iW4WCJQQc/edit?gid=234733324#gid=234733324&range=A1:D1",
  date: "2026-10-14",
- dateLabel: "14 ต.ค. 2569 (พุธ)",
+ dateLabel: "14 Oct 2026 (Wed)",
  icon: "temple_buddhist",
  title: "วันไป → วัดหลงซาน → ตลาดว่านหัว",
  fullRouteUrl: "https://maps.app.goo.gl/C1QBGTa7ECZtd1Az9",
@@ -1043,7 +1043,7 @@ const tripData = [
  dayNumber: 2,
  expensesUrl: "https://docs.google.com/spreadsheets/d/1xXDdO5n5-8Hkeg27HuKcyH8iW4WCJQQc/edit?gid=439814506#gid=439814506&range=A1:D1",
  date: "2026-10-15",
- dateLabel: "15 ต.ค. 2569 (พฤหัส)",
+ dateLabel: "15 Oct 2026 (Thu)",
  icon: "pets",
  title: "Houtong Cat Village → Heping Island → Zhengbin Fishing Port → Ningxia Night Market",
  timeline: [
@@ -1163,7 +1163,7 @@ const tripData = [
  dayNumber: 3,
  expensesUrl: "https://docs.google.com/spreadsheets/d/1xXDdO5n5-8Hkeg27HuKcyH8iW4WCJQQc/edit?gid=1391490501#gid=1391490501&range=A1:D1",
  date: "2026-10-16",
- dateLabel: "16 ต.ค. 2569 (ศุกร์)",
+ dateLabel: "16 Oct 2026 (Fri)",
  icon: "restaurant",
  title: "Fish Market → เดินเล่นใน Taipei → Raohe Night Market",
  timeline: [
@@ -1271,7 +1271,7 @@ const tripData = [
  dayNumber: 4,
  expensesUrl: "https://docs.google.com/spreadsheets/d/1xXDdO5n5-8Hkeg27HuKcyH8iW4WCJQQc/edit?gid=1275011868#gid=1275011868&range=A1:D1",
  date: "2026-10-17",
- dateLabel: "17 ต.ค. 2569 (เสาร์)",
+ dateLabel: "17 Oct 2026 (Sat)",
  icon: "landscape",
  title: "น้ำตก Wulai → ทะเลสาบ Yun Hsien → เดินเล่น Ximending",
  timeline: [
@@ -1347,7 +1347,7 @@ const tripData = [
  dayNumber: 5,
  expensesUrl: "https://docs.google.com/spreadsheets/d/1xXDdO5n5-8Hkeg27HuKcyH8iW4WCJQQc/edit?gid=2024367396#gid=2024367396&range=A1:D1",
  date: "2026-10-18",
- dateLabel: "18 ต.ค. 2569 (อาทิตย์)",
+ dateLabel: "18 Oct 2026 (Sun)",
  icon: "card_giftcard",
  title: "ซื้อของฝากย่าน Ximending → เดินทางกลับ",
  timeline: [
@@ -1497,7 +1497,7 @@ function transportToIcon(t) {
 }
 
 function splitDateLabel(dateLabel){
- const m = (dateLabel || '').match(/^(\d+\s*\S+)\s+\d{4}\s*(\(.*\))$/);
+ const m = (dateLabel || '').match(/^(.*?)\s*(\(.*\))$/);
  return m ? { main: m[1], weekday: m[2] } : { main: dateLabel || '', weekday: '' };
 }
 
@@ -1511,10 +1511,12 @@ function renderDayRail(){
  const { main: dateMain, weekday: dateWeekday } = splitDateLabel(d.dateLabel);
  pill.innerHTML = `
  <div class="pill-top">
- <div class="num">${i === activeIndex ? 'Day ' + d.dayNumber : d.dayNumber}</div>
+ <div class="num">Day ${d.dayNumber}</div>
  </div>
- <div class="pill-date-main">${dateMain}</div>
- <div class="pill-date-weekday">${dateWeekday}</div>
+ <div class="pill-date-row">
+ <span class="pill-date-main">${dateMain}</span>
+ <span class="pill-date-weekday">${dateWeekday}</span>
+ </div>
  <div class="route">${d.title}</div>
  `;
  pill.addEventListener('click', () => switchDay(i));
@@ -1626,6 +1628,7 @@ function renderMap(day){
  marker.addTo(markerLayer);
  bounds.push([l.lat, l.lng]);
  });
+ if (leafletMap) leafletMap.invalidateSize();
  if (bounds.length) leafletMap.fitBounds(bounds, { padding:[32,32], maxZoom:15 });
 
  const visual = document.getElementById('routeVisual');
@@ -2115,7 +2118,7 @@ async function renderReportSummary(){
  : 'ยังไม่มีรายการ';
  return `
  <div class="report-day-row">
- <span>Day ${d.dayNumber} <span class="report-day-date">(${d.dateLabel})</span></span>
+ <span>Day ${d.dayNumber} <span class="report-day-date">${d.dateLabel}</span></span>
  <span>${dayTotals[i].toLocaleString()} NT$</span>
  </div>
  <div class="report-day-subline">${personLine}</div>
@@ -2291,7 +2294,7 @@ document.getElementById('exportExcelBtn').addEventListener('click', async () => 
  push(['วันที่', 'ยอดรวม (NT$)'], { 0: headerStyle, 1: headerStyle });
  tripData.forEach((d, i) => {
  const total = allLists[i].reduce((s, e) => s + money(e.amount), 0);
- push([`Day ${d.dayNumber} (${d.dateLabel})`, total]);
+ push([`Day ${d.dayNumber} ${d.dateLabel}`, total]);
  });
  push(['']);
  push(['รวมทั้งทริป', grandTotal], { 0: bold, 1: bold });
@@ -2343,6 +2346,18 @@ document.getElementById('exportExcelBtn').addEventListener('click', async () => 
 
 try { initLeaflet(); } catch (e) { console.error('initLeaflet failed', e); }
 try { renderAll(); } catch (e) { console.error('renderAll failed', e); }
+
+// Leaflet measures its container on init; if that happens before web fonts finish
+// loading (which can reflow card heights) or before the page has fully laid out,
+// the map is left showing a grey placeholder with tiles positioned for the wrong
+// size. Re-measuring after load and once fonts settle fixes that.
+try {
+ const refreshMapSize = () => { if (leafletMap) leafletMap.invalidateSize(); };
+ window.addEventListener('load', () => setTimeout(refreshMapSize, 200));
+ if (document.fonts && document.fonts.ready){
+ document.fonts.ready.then(() => setTimeout(refreshMapSize, 100));
+ }
+} catch (e) { console.error('map invalidateSize wiring failed', e); }
 
 try {
  const dayRailEl = document.getElementById('dayRail');
