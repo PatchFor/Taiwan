@@ -112,8 +112,7 @@
  .day-rail.is-stuck .day-pill{padding:9px 10px;}
  .day-rail.is-stuck .day-pill .route{display:none;}
  .day-rail.is-stuck .day-pill .pill-top{margin-bottom:0;}
- .day-rail.is-stuck .day-pill .pill-day-label,
- .day-rail.is-stuck .day-pill .pill-date-weekday{display:none;}
+ .day-rail.is-stuck .day-pill:not(.active) .pill-date-weekday{display:none;}
  .day-rail.is-stuck .day-pill .pill-date-main{font-size:12.5px;}
  .day-pill{
  background:var(--surface);
@@ -129,8 +128,7 @@
  .day-pill:active{transform:translateY(0);}
  .day-pill.active{border-color:var(--primary); background:var(--primary-soft);box-shadow:var(--shadow-hover);}
  .day-pill .pill-top{
- display:flex; align-items:center; gap:6px; margin-bottom:4px;
- flex-wrap:wrap;
+ display:flex; align-items:center; margin-bottom:6px;
  }
  .day-pill .num{
  background:var(--primary);
@@ -139,16 +137,14 @@
  width:26px;height:26px;border-radius:50%;
  display:flex;align-items:center;justify-content:center;
  font-size:13px;
+ white-space:nowrap;
+ transition:width .15s ease, border-radius .15s ease, padding .15s ease;
  }
- .day-pill.active .num{background:var(--primary-dark);}
- .day-pill .date{display:none;}
- .pill-emoji{font-size:22px;margin-left:auto;line-height:1;}
- .pill-day-label{
- font-size:11px;font-weight:700;color:var(--primary-dark);
- text-transform:uppercase;letter-spacing:0.04em;
- margin-bottom:2px;
+ .day-pill.active .num{
+ background:var(--primary-dark);
+ width:auto;padding:0 12px;border-radius:14px;
+ font-size:11.5px;font-weight:800;letter-spacing:0.02em;
  }
- .day-pill.active .pill-day-label{color:var(--primary);}
  .pill-date-main{font-size:16px;font-weight:800;color:var(--ink);line-height:1.15;letter-spacing:-0.01em;}
  .pill-date-weekday{font-size:11.5px;font-weight:600;color:var(--ink-secondary);margin-bottom:6px;}
  .day-pill .route{font-size:12.5px;color:var(--ink);line-height:1.4;overflow-wrap:break-word;}
@@ -395,6 +391,30 @@
  .expense-status.is-error{color:var(--primary-dark);background:var(--primary-soft);padding:10px 14px;}
 
  .expense-list{padding:0;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+ .undo-toast{
+ position:relative;overflow:hidden;
+ display:flex;align-items:center;gap:10px;
+ background:var(--ink);color:#fff;
+ border-radius:16px;padding:12px 14px;
+ margin-bottom:10px;
+ animation:undoToastIn .2s cubic-bezier(0.2,0,0,1);
+ }
+ @keyframes undoToastIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+ .undo-toast-text{flex:1;min-width:0;font-size:12.5px;font-weight:600;overflow-wrap:break-word;}
+ .undo-toast-btn{
+ flex:0 0 auto;
+ background:none;border:none;color:var(--secondary);
+ font-family:inherit;font-weight:800;font-size:12.5px;
+ text-transform:uppercase;letter-spacing:0.03em;
+ cursor:pointer;padding:4px 6px;
+ }
+ .undo-toast-btn:hover{text-decoration:underline;}
+ .undo-toast-bar{
+ position:absolute;left:0;bottom:0;height:3px;
+ background:var(--primary);
+ animation:undoToastShrink 3s linear forwards;
+ }
+ @keyframes undoToastShrink{from{width:100%;}to{width:0%;}}
  .expense-empty{
  font-size:12.5px;color:var(--ink-secondary);
  background:var(--bg);
@@ -652,7 +672,7 @@
  .fab-backdrop{
  position:fixed;inset:0;
  background:rgba(34,34,34,0.28);
- z-index:80;
+ z-index:1600;
  opacity:0;pointer-events:none;
  transition:opacity .2s ease;
  }
@@ -662,7 +682,7 @@
  position:fixed;
  right:max(20px, env(safe-area-inset-right));
  bottom:max(20px, env(safe-area-inset-bottom));
- z-index:90;
+ z-index:1700;
  display:flex;flex-direction:column;align-items:flex-end;gap:14px;
  }
  .fab-menu{display:flex;flex-direction:column;align-items:flex-end;gap:12px;}
@@ -748,17 +768,13 @@
  display:grid;
  grid-template-columns:repeat(5, 1fr);
  }
- .day-pill{padding:8px 4px;text-align:center;}
- .day-pill .pill-top{flex-direction:column;gap:2px;}
- .day-pill .pill-top > *{min-width:0;width:100%;}
+ .day-pill{padding:8px 5px;text-align:center;}
+ .day-pill .pill-top{justify-content:center;margin-bottom:4px;}
  .day-pill .route{display:none;}
- .day-pill .date{
- display:block;font-size:9.5px;line-height:1.25;
- overflow-wrap:break-word;word-break:break-word;
- }
- .day-pill .num{width:18px;height:18px;font-size:10px;margin:0 auto;}
- .pill-emoji{margin-left:0;font-size:16px;overflow:hidden;}
- .pill-day-label,.pill-date-main,.pill-date-weekday{display:none;}
+ .day-pill .num{width:20px;height:20px;font-size:10.5px;}
+ .day-pill.active .num{padding:0 9px;font-size:9.5px;border-radius:11px;}
+ .pill-date-main{font-size:12px;overflow-wrap:break-word;word-break:break-word;}
+ .pill-date-weekday{font-size:9.5px;margin-bottom:0;}
  }
 
  /* ---------- Mobile responsive ---------- */
@@ -771,8 +787,9 @@
  .day-rail{margin-top:-4px;gap:6px;}
  .day-pill{padding:8px 3px;}
  .day-pill .num{width:16px;height:16px;font-size:9px;}
- .day-pill .date{font-size:8.5px;}
- .pill-emoji{font-size:14px;}
+ .day-pill.active .num{padding:0 7px;font-size:8.5px;border-radius:10px;}
+ .pill-date-main{font-size:10.5px;}
+ .pill-date-weekday{font-size:8.5px;}
 
  .section-title{flex-wrap:wrap;margin:24px 0 12px;gap:8px;}
  .section-title h2{font-size:19px;line-height:1.35;}
@@ -1437,8 +1454,6 @@ function pinIcon(num){
 }
 
 
-const DAY_ICONS = ['temple_buddhist', 'pets', 'restaurant', 'landscape', 'card_giftcard'];
-
 function stripEmoji(str) {
  return str.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2702}-\u{27B0}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, '').trim();
 }
@@ -1480,11 +1495,8 @@ function renderDayRail(){
  const { main: dateMain, weekday: dateWeekday } = splitDateLabel(d.dateLabel);
  pill.innerHTML = `
  <div class="pill-top">
- <div class="num">${d.dayNumber}</div>
- <div class="date">${d.dateLabel}</div>
- <div class="pill-emoji"><span class="mi">${d.icon || DAY_ICONS[i] || 'event'}</span></div>
+ <div class="num">${i === activeIndex ? 'Day ' + d.dayNumber : d.dayNumber}</div>
  </div>
- <div class="pill-day-label">Day ${d.dayNumber}</div>
  <div class="pill-date-main">${dateMain}</div>
  <div class="pill-date-weekday">${dateWeekday}</div>
  <div class="route">${d.title}</div>
@@ -1710,21 +1722,29 @@ function findTodayDayNumber(){
 const PEOPLE = ['AM', 'For', 'Arm'];
 
 let cachedTwdToThbRate = null;
-let rateFetchAttempted = false;
+let rateFetchedAt = 0;
+let rateFetchPromise = null;
+const RATE_REFRESH_MS = 10 * 60 * 1000; // keep the rate reasonably "live" for long sessions
 
-async function getTwdToThbRate(){
- if (cachedTwdToThbRate !== null || rateFetchAttempted) return cachedTwdToThbRate;
- rateFetchAttempted = true;
- try {
- const res = await fetch('https://api.frankfurter.app/latest?from=TWD&to=THB');
- const data = await res.json();
+function getTwdToThbRate(){
+ const isStale = cachedTwdToThbRate === null || (Date.now() - rateFetchedAt) > RATE_REFRESH_MS;
+ if (!isStale) return Promise.resolve(cachedTwdToThbRate);
+ if (rateFetchPromise) return rateFetchPromise; // a fetch is already in flight — share it
+ rateFetchPromise = fetch('https://api.frankfurter.app/latest?from=TWD&to=THB')
+ .then(res => res.json())
+ .then(data => {
  if (data && data.rates && typeof data.rates.THB === 'number'){
  cachedTwdToThbRate = data.rates.THB;
- }
- } catch (e) {
- console.error('exchange rate fetch failed', e);
+ rateFetchedAt = Date.now();
  }
  return cachedTwdToThbRate;
+ })
+ .catch(e => {
+ console.error('exchange rate fetch failed', e);
+ return cachedTwdToThbRate;
+ })
+ .finally(() => { rateFetchPromise = null; });
+ return rateFetchPromise;
 }
 let reportActiveDay = 1;
 
@@ -1838,6 +1858,11 @@ async function renderReportEntrySection(dayNumber){
  <div id="expenseStatus" class="expense-status"></div>
  </form>
  <div id="expenseList" class="expense-list">${expenseRowsHtml(list)}</div>
+ <div id="undoToast" class="undo-toast" style="display:none;">
+ <span id="undoToastText" class="undo-toast-text"></span>
+ <button type="button" id="undoBtn" class="undo-toast-btn">Undo</button>
+ <div class="undo-toast-bar"></div>
+ </div>
  <div id="todaySummary" class="today-summary"></div>
  ${usingStorageFallback ? `<div class="fallback-note"><span class="mi mi-sm">info</span> ตอนนี้ระบบจดจำข้อมูลข้ามอุปกรณ์ไม่ได้ ข้อมูลจะอยู่แค่ในแท็บนี้จนกว่าจะปิด/รีเฟรชหน้า แนะนำให้กด Export Excel เก็บไว้เป็นระยะ</div>` : ''}
  `;
@@ -1902,6 +1927,7 @@ async function renderReportEntrySection(dayNumber){
  async function updateRateNote(){
  const raw = parseFloat(amountInput.value);
  if (!raw || raw <= 0){ rateNoteEl.textContent = ''; return; }
+ if (cachedTwdToThbRate === null) rateNoteEl.textContent = 'Fetching exchange rate…';
  const rate = await getTwdToThbRate();
  if (!rate){ rateNoteEl.textContent = 'Fetching exchange rate…'; return; }
  if (selectedCurrency === 'THB'){
@@ -1920,7 +1946,7 @@ async function renderReportEntrySection(dayNumber){
  rateNoteEl.textContent = '';
  }
 
- getTwdToThbRate(); // warm the exchange-rate cache early so the live preview responds instantly
+ getTwdToThbRate().then(updateRateNote); // warm the cache and refresh the preview once the rate arrives
  amountInput.addEventListener('input', updateRateNote);
 
  function resetSegmented(containerId, hiddenInputId, defaultValue){
@@ -1967,19 +1993,61 @@ async function renderReportEntrySection(dayNumber){
  persist();
  });
 
+ // ---- Delete with a 3-second undo window ----
+ let pendingDelete = null; // { item, index, timer }
+ const undoToast = document.getElementById('undoToast');
+ const undoToastText = document.getElementById('undoToastText');
+ const undoBtn = document.getElementById('undoBtn');
+
+ function hideUndoToast(){
+ undoToast.style.display = 'none';
+ }
+
+ function showUndoToast(item){
+ undoToastText.textContent = `Deleted "${item.item}" (${Number(item.amount).toLocaleString()} NT$)`;
+ const bar = undoToast.querySelector('.undo-toast-bar');
+ bar.style.animation = 'none';
+ void bar.offsetHeight; // force reflow so the shrink animation restarts every time
+ bar.style.animation = '';
+ undoToast.style.display = 'flex';
+ }
+
+ function commitPendingDelete(){
+ if (!pendingDelete) return;
+ pendingDelete = null;
+ hideUndoToast();
+ persist();
+ }
+
+ function scheduleDelete(idx){
+ if (pendingDelete) commitPendingDelete(); // commit any earlier pending delete first
+ const item = list[idx];
+ list.splice(idx, 1);
+ refreshListUI();
+ pendingDelete = { item, index: idx };
+ showUndoToast(item);
+ pendingDelete.timer = setTimeout(commitPendingDelete, 3000);
+ }
+
+ undoBtn.addEventListener('click', () => {
+ if (!pendingDelete) return;
+ clearTimeout(pendingDelete.timer);
+ list.splice(pendingDelete.index, 0, pendingDelete.item);
+ pendingDelete = null;
+ hideUndoToast();
+ refreshListUI();
+ });
+
  document.getElementById('expenseList').addEventListener('click', (ev) => {
  const btn = ev.target.closest('.exp-del');
  if (!btn) return;
- const idx = Number(btn.dataset.idx);
- list.splice(idx, 1);
- refreshListUI();
- persist();
+ scheduleDelete(Number(btn.dataset.idx));
  });
 
  renderTodaySummary(list, dayNumber);
 }
 
-function renderTodaySummary(list, dayNumber){
+async function renderTodaySummary(list, dayNumber){
  const el = document.getElementById('todaySummary');
  if (!el) return;
  if (!list.length){
@@ -1987,9 +2055,11 @@ function renderTodaySummary(list, dayNumber){
  return;
  }
  const total = list.reduce((s, e) => s + Number(e.amount || 0), 0);
+ const rate = await getTwdToThbRate();
+ const thbText = rate ? ` <span class="fx-thb">(≈ ${Math.round(total * rate).toLocaleString()} บาท)</span>` : '';
  el.innerHTML = `
  <div class="today-summary-title"><span class="mi mi-sm">summarize</span> Day ${dayNumber} Summary</div>
- <div class="today-summary-total">รวมจ่ายไปทั้งหมด: ${total.toLocaleString()} NT$</div>
+ <div class="today-summary-total">รวมจ่ายไปทั้งหมด: ${total.toLocaleString()} NT$${thbText}</div>
  `;
 }
 
