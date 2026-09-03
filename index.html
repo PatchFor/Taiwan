@@ -140,6 +140,11 @@
  font-size:12.5px;
  }
 
+ #dayContent{
+ transition:opacity .18s ease, transform .18s ease;
+ }
+ #dayContent.day-fade{opacity:0;transform:translateY(6px);}
+
  .section-title{
  display:flex;align-items:center;gap:10px;
  margin:34px 0 16px;
@@ -300,35 +305,76 @@
  .notes-card{margin-top:22px;padding:20px 22px;}
 
  /* ---------- Expense tracker ---------- */
- .expense-card{padding:8px 4px 20px;}
  .expense-form{
- display:grid;grid-template-columns:1fr 1fr;gap:10px;
- padding:0 22px 14px;
+ display:flex;flex-direction:column;gap:14px;
+ padding:0 0 16px;
  }
- .expense-form input, .expense-form select{
+ .field-group{display:flex;flex-direction:column;gap:6px;}
+ .field-label{
+ font-size:11.5px;font-weight:700;color:var(--ink-secondary);
+ text-transform:uppercase;letter-spacing:0.05em;
+ }
+ .expense-form input{
  font-family:inherit;font-size:13.5px;
  padding:10px 14px;border-radius:16px;
  border:1.5px solid var(--border);
  background:var(--surface);color:var(--ink);
- outline:none;
+ outline:none;width:100%;
  }
- .expense-form input:focus, .expense-form select:focus{border-color:var(--primary);}
- .expense-form input#expItem{grid-column:1 / -1;}
- .expense-rate-note{
- grid-column:1 / -1;
- font-size:10.5px;color:var(--ink-secondary);
- margin-top:-4px;
+ .expense-form input:focus{border-color:var(--primary);}
+ .amount-row{display:flex;gap:8px;align-items:stretch;}
+ .amount-row #expAmount{flex:1;min-width:0;font-size:18px;font-weight:700;}
+ .expense-rate-note{font-size:10.5px;color:var(--ink-secondary);min-height:13px;}
+
+ /* Segmented control: Payer Name, Payment Method */
+ .segmented{display:flex;background:var(--bg);border-radius:16px;padding:3px;gap:2px;}
+ .segmented-opt{
+ flex:1;
+ display:flex;align-items:center;justify-content:center;gap:5px;
+ font-family:inherit;font-size:12.5px;font-weight:700;
+ color:var(--ink-secondary);
+ background:none;border:none;border-radius:13px;
+ padding:9px 8px;cursor:pointer;
+ transition:background .15s ease, color .15s ease, box-shadow .15s ease;
+ white-space:nowrap;
  }
+ .segmented-opt .mi{font-size:16px;}
+ .segmented-opt:hover{color:var(--ink);}
+ .segmented-opt.active{background:var(--surface);color:var(--primary-dark);box-shadow:var(--shadow-sm);}
+
+ /* Currency toggle: NT$ / THB */
+ .currency-toggle{flex:0 0 auto;display:flex;background:var(--bg);border-radius:16px;padding:3px;gap:2px;}
+ .currency-opt{
+ font-family:inherit;font-size:12.5px;font-weight:700;
+ color:var(--ink-secondary);
+ background:none;border:none;border-radius:13px;
+ padding:0 12px;cursor:pointer;
+ transition:background .15s ease, color .15s ease, box-shadow .15s ease;
+ }
+ .currency-opt:hover{color:var(--ink);}
+ .currency-opt.active{background:var(--surface);color:var(--primary-dark);box-shadow:var(--shadow-sm);}
+
  .expense-submit-btn{
- grid-column:1 / -1;
- font-family:inherit;font-size:13.5px;font-weight:700;
+ font-family:inherit;font-size:14px;font-weight:700;
  color:#fff;background:var(--primary);
  border:none;border-radius:16px;
- padding:11px 14px;cursor:pointer;
- transition:transform .12s ease;
+ padding:13px 14px;cursor:pointer;
+ transition:transform .12s ease, background .15s ease;
  }
- .expense-submit-btn:hover{transform:translateY(-1px);}
- .expense-list{padding:0 22px;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+ .expense-submit-btn:hover{transform:translateY(-1px);background:var(--primary-dark);}
+ .expense-submit-btn:active{transform:translateY(0) scale(0.98);}
+
+ .expense-status{
+ display:flex;align-items:center;gap:6px;
+ font-size:12.5px;font-weight:700;
+ border-radius:12px;
+ transition:all .2s ease;
+ }
+ .expense-status:empty{padding:0;}
+ .expense-status.is-ok{color:var(--secondary-dark);background:var(--secondary-soft);padding:10px 14px;}
+ .expense-status.is-error{color:var(--primary-dark);background:var(--primary-soft);padding:10px 14px;}
+
+ .expense-list{padding:0;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
  .expense-empty{
  font-size:12.5px;color:var(--ink-secondary);
  background:var(--bg);
@@ -339,6 +385,11 @@
  background:var(--bg);
  border-radius:16px;padding:10px 14px;
  }
+ @keyframes expenseRowIn{
+ 0%{background:var(--secondary-soft);transform:scale(0.98);}
+ 100%{background:var(--bg);transform:scale(1);}
+ }
+ .expense-row-new{animation:expenseRowIn .7s ease;}
  .expense-row-main{flex:1;min-width:0;display:flex;flex-direction:column;}
  .expense-name{font-weight:700;font-size:12.5px;color:var(--ink);}
  .expense-desc{font-size:11.5px;color:var(--ink-secondary);}
@@ -355,7 +406,7 @@
  border-radius:16px;margin-left:6px;
  }
  .summary-del:hover{background:var(--primary-soft);color:var(--primary-dark);}
- .expense-summary{padding:6px 22px 4px;}
+ .expense-summary{padding:6px 0 4px;}
  .summary-total{
  font-size:13px;font-weight:700;color:var(--ink);
  margin-bottom:10px;
@@ -372,16 +423,13 @@
  .bal-plus{margin-left:auto;color:var(--secondary-dark);font-weight:700;}
  .bal-minus{margin-left:auto;color:var(--primary-dark);font-weight:700;}
  .expense-actions{
- padding:14px 22px 4px;
+ padding:14px 0 4px;
  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
  }
  .expense-disabled-note{
- margin:0 22px 4px;padding:14px;
+ margin:0 0 4px;padding:14px;
  background:var(--primary-soft);color:var(--primary-dark);
  border-radius:16px;font-size:12.5px;line-height:1.6;
- }
- @media (max-width:480px){
- .expense-form{grid-template-columns:1fr;}
  }
 
  .expense-row .exp-name{font-weight:700;color:var(--primary-dark);flex:0 0 50px;}
@@ -732,19 +780,13 @@
  .route-visual{padding:14px 10px 4px;}
  .map-actions{padding:12px 10px 4px;}
 
- .expense-form{padding:0 16px 12px;gap:8px;}
- .expense-list{padding:0 16px;}
- .expense-summary{padding:6px 16px 4px;}
- .expense-actions{padding:12px 16px 4px;}
+ .expense-form{gap:12px;}
  .expense-row{flex-wrap:wrap;}
  .expense-amount{margin-left:auto;}
  .summary-row{flex-wrap:wrap;row-gap:4px;}
  .bal-plus,.bal-minus{margin-left:0;}
 
  .notes-card{padding:16px 16px;}
- .expense-card{padding:14px 16px 16px;}
- .expense-form{grid-template-columns:1fr;}
- .expense-row{flex-wrap:wrap;}
  .report-modal{max-height:90vh;}
  .notes-card ul{padding-left:16px;}
  }
@@ -764,8 +806,26 @@
 <div class="wrap">
  <div class="day-rail" id="dayRail"></div>
 
+ <div id="dayContent">
  <div class="section-title">
  <h2 id="dayTitle"></h2>
+ </div>
+
+ <div class="grid">
+ <div class="card timeline-card">
+ <div class="card-head"><span class="mi mi-sm">calendar_today</span> Travel Plan</div>
+ <div class="tl-list" id="timeline"></div>
+ </div>
+
+ <div class="card map-card">
+ <div class="card-head"><span class="mi mi-sm">map</span> Map</div>
+ <div class="leaflet-wrap"><div id="leafletMap"></div></div>
+ <div class="route-visual" id="routeVisual"></div>
+ <div class="map-actions" id="mapActions"></div>
+ </div>
+ </div>
+
+ <div class="card notes-card" id="notesCard"></div>
  </div>
 
  <div id="reportOverlay" class="report-overlay" style="display:none;">
@@ -787,22 +847,6 @@
  </div>
  </div>
  </div>
-
- <div class="grid">
- <div class="card timeline-card">
- <div class="card-head"><span class="mi mi-sm">calendar_today</span> Travel Plan</div>
- <div class="tl-list" id="timeline"></div>
- </div>
-
- <div class="card map-card">
- <div class="card-head"><span class="mi mi-sm">map</span> Map</div>
- <div class="leaflet-wrap"><div id="leafletMap"></div></div>
- <div class="route-visual" id="routeVisual"></div>
- <div class="map-actions" id="mapActions"></div>
- </div>
- </div>
-
- <div class="card notes-card" id="notesCard"></div>
 
  <footer id="pageFooter"></footer>
 </div>
@@ -1425,7 +1469,7 @@ function renderDayRail(){
  </div>
  <div class="route">${d.title}</div>
  `;
- pill.addEventListener('click', () => { activeIndex = i; renderAll(); });
+ pill.addEventListener('click', () => switchDay(i));
  rail.appendChild(pill);
  });
 }
@@ -1602,14 +1646,43 @@ function renderNotes(day){
  `;
 }
 
-function renderAll(){
- const day = tripData[activeIndex];
- renderDayRail();
+function renderDayContent(day){
  document.getElementById('dayTitle').textContent = `Day ${day.dayNumber} · ${stripEmoji(day.title)}`;
  renderTimeline(day);
  renderMap(day);
  renderNotes(day);
  document.getElementById('pageFooter').textContent = `DAY ${day.dayNumber} OF ${tripData.length}`;
+}
+
+function renderAll(){
+ renderDayRail();
+ renderDayContent(tripData[activeIndex]);
+}
+
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function switchDay(i){
+ if (i === activeIndex) return;
+ activeIndex = i;
+ renderDayRail();
+ const day = tripData[activeIndex];
+ const content = document.getElementById('dayContent');
+ if (prefersReducedMotion || !content){
+ renderDayContent(day);
+ return;
+ }
+ content.classList.add('day-fade');
+ window.setTimeout(() => {
+ renderDayContent(day);
+ requestAnimationFrame(() => content.classList.remove('day-fade'));
+ }, 180);
+}
+
+function findTodayDayNumber(){
+ const now = new Date();
+ const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+ const match = tripData.find(d => d.date === todayStr);
+ return match ? match.dayNumber : null;
 }
 
 /* ================= Expense tracker (shared storage, all inside the Report modal) ================= */
@@ -1674,10 +1747,10 @@ async function saveDayExpenses(dayNumber, list){
  }
 }
 
-function expenseRowsHtml(list){
+function expenseRowsHtml(list, highlightIdx){
  if (!list.length) return `<div class="expense-empty">ยังไม่มีรายการ ลองเพิ่มรายจ่ายแรกได้เลยค่ะ</div>`;
  return list.map((e, i) => `
- <div class="expense-row">
+ <div class="expense-row${i === highlightIdx ? ' expense-row-new' : ''}">
  <span class="exp-name">${e.name}</span>
  <span class="exp-item">${e.item}</span>
  <span class="exp-amount">${Number(e.amount).toLocaleString()} NT$</span>
@@ -1706,18 +1779,41 @@ async function renderReportEntrySection(dayNumber){
  <div class="report-day-tabs">${dayTabsHtml}</div>
  ${loadError ? `<div class="expense-error"><span class="mi mi-sm">error</span> Load failed: ${loadError.message || loadError}</div>` : ''}
  <form id="expenseForm" class="expense-form">
- <select id="expName" required>
- <option value="" disabled selected>Name</option>
- ${PEOPLE.map(p => `<option value="${p}">${p}</option>`).join('')}
- </select>
- <input type="text" id="expItem" placeholder="Item (รายการ)" required>
- <input type="number" id="expAmount" placeholder="Amount (NTD)" required min="0" step="1">
- <select id="expPayment" required>
- <option value="" disabled selected>Payment Method</option>
- <option value="เงินสด">เงินสด</option>
- <option value="บัตร">บัตร</option>
- <option value="โอนเงิน">โอนเงิน</option>
- </select>
+ <div class="field-group">
+ <label class="field-label" for="expAmount">Pay Amount</label>
+ <div class="amount-row">
+ <input type="number" id="expAmount" placeholder="0" required min="0" step="1" inputmode="decimal">
+ <div class="currency-toggle" id="currencyToggle" role="group" aria-label="Currency">
+ <button type="button" class="currency-opt active" data-cur="NTD">NT$</button>
+ <button type="button" class="currency-opt" data-cur="THB">THB</button>
+ </div>
+ </div>
+ <div class="expense-rate-note" id="expenseRateNote"></div>
+ </div>
+
+ <div class="field-group">
+ <label class="field-label" for="expItem">Expense Detail</label>
+ <input type="text" id="expItem" placeholder="e.g. Taxi to hotel" required>
+ </div>
+
+ <div class="field-group">
+ <label class="field-label" id="payerLabel">Payer Name</label>
+ <div class="segmented" id="payerSegmented" role="tablist" aria-labelledby="payerLabel">
+ ${PEOPLE.map((p, i) => `<button type="button" class="segmented-opt${i === 0 ? ' active' : ''}" data-value="${p}" role="tab" aria-selected="${i === 0}">${p}</button>`).join('')}
+ </div>
+ <input type="hidden" id="expName" value="${PEOPLE[0]}" required>
+ </div>
+
+ <div class="field-group">
+ <label class="field-label" id="paymentLabel">Payment Method</label>
+ <div class="segmented" id="paymentSegmented" role="tablist" aria-labelledby="paymentLabel">
+ <button type="button" class="segmented-opt active" data-value="เงินสด" role="tab" aria-selected="true"><span class="mi mi-sm">payments</span> เงินสด</button>
+ <button type="button" class="segmented-opt" data-value="บัตร" role="tab" aria-selected="false"><span class="mi mi-sm">credit_card</span> บัตร</button>
+ <button type="button" class="segmented-opt" data-value="โอนเงิน" role="tab" aria-selected="false"><span class="mi mi-sm">account_balance</span> โอนเงิน</button>
+ </div>
+ <input type="hidden" id="expPayment" value="เงินสด" required>
+ </div>
+
  <button type="submit" class="expense-submit-btn"><span class="mi mi-sm">check_circle</span> Submit</button>
  <div id="expenseStatus" class="expense-status"></div>
  </form>
@@ -1733,16 +1829,16 @@ async function renderReportEntrySection(dayNumber){
  });
  });
 
- function refreshListUI(){
- document.getElementById('expenseList').innerHTML = expenseRowsHtml(list);
+ function refreshListUI(highlightIdx){
+ document.getElementById('expenseList').innerHTML = expenseRowsHtml(list, highlightIdx);
  renderTodaySummary(list, dayNumber);
  }
 
  function setStatus(msg, isError){
  const el = document.getElementById('expenseStatus');
- el.textContent = msg;
+ el.innerHTML = `<span class="mi mi-sm">${isError ? 'error' : 'check_circle'}</span> ${msg}`;
  el.className = 'expense-status' + (isError ? ' is-error' : ' is-ok');
- if (!isError) setTimeout(() => { if (el) { el.textContent=''; el.className='expense-status'; } }, 2500);
+ if (!isError) setTimeout(() => { if (el) { el.innerHTML=''; el.className='expense-status'; } }, 2500);
  }
 
  async function persist(){
@@ -1759,16 +1855,86 @@ async function renderReportEntrySection(dayNumber){
  }
  }
 
- document.getElementById('expenseForm').addEventListener('submit', (ev) => {
+ // ---- Segmented controls: Payer Name / Payment Method ----
+ function wireSegmented(containerId, hiddenInputId){
+ const container = document.getElementById(containerId);
+ container.querySelectorAll('.segmented-opt').forEach(btn => {
+ btn.addEventListener('click', () => {
+ container.querySelectorAll('.segmented-opt').forEach(b => {
+ b.classList.remove('active');
+ b.setAttribute('aria-selected', 'false');
+ });
+ btn.classList.add('active');
+ btn.setAttribute('aria-selected', 'true');
+ document.getElementById(hiddenInputId).value = btn.dataset.value;
+ });
+ });
+ }
+ wireSegmented('payerSegmented', 'expName');
+ wireSegmented('paymentSegmented', 'expPayment');
+
+ // ---- Currency toggle: NT$ / THB ----
+ let selectedCurrency = 'NTD';
+ const currencyToggle = document.getElementById('currencyToggle');
+ const rateNoteEl = document.getElementById('expenseRateNote');
+ const amountInput = document.getElementById('expAmount');
+
+ async function updateRateNote(){
+ if (selectedCurrency !== 'THB'){ rateNoteEl.textContent = ''; return; }
+ const rate = await getTwdToThbRate();
+ rateNoteEl.textContent = rate
+ ? `≈ ${rate.toFixed(2)} THB per NT$1 — saved as NT$`
+ : 'Fetching exchange rate…';
+ }
+
+ function resetCurrencyToggle(){
+ selectedCurrency = 'NTD';
+ currencyToggle.querySelectorAll('.currency-opt').forEach(b => b.classList.toggle('active', b.dataset.cur === 'NTD'));
+ amountInput.placeholder = '0';
+ rateNoteEl.textContent = '';
+ }
+
+ function resetSegmented(containerId, hiddenInputId, defaultValue){
+ const container = document.getElementById(containerId);
+ container.querySelectorAll('.segmented-opt').forEach(b => {
+ const isDefault = b.dataset.value === defaultValue;
+ b.classList.toggle('active', isDefault);
+ b.setAttribute('aria-selected', isDefault ? 'true' : 'false');
+ });
+ document.getElementById(hiddenInputId).value = defaultValue;
+ }
+
+ currencyToggle.querySelectorAll('.currency-opt').forEach(btn => {
+ btn.addEventListener('click', () => {
+ currencyToggle.querySelectorAll('.currency-opt').forEach(b => b.classList.remove('active'));
+ btn.classList.add('active');
+ selectedCurrency = btn.dataset.cur;
+ amountInput.placeholder = selectedCurrency === 'THB' ? '0 (THB)' : '0';
+ updateRateNote();
+ });
+ });
+
+ document.getElementById('expenseForm').addEventListener('submit', async (ev) => {
  ev.preventDefault();
  const name = document.getElementById('expName').value;
  const item = document.getElementById('expItem').value.trim();
- const amount = parseFloat(document.getElementById('expAmount').value);
+ let amount = parseFloat(amountInput.value);
  const payment = document.getElementById('expPayment').value;
  if (!name || !item || !amount || !payment) return;
+ if (selectedCurrency === 'THB'){
+ const rate = await getTwdToThbRate();
+ if (!rate){
+ setStatus('Exchange rate unavailable — switch to NT$ or try again', true);
+ return;
+ }
+ amount = amount / rate;
+ }
  list.push({ name, item, amount, payment });
- refreshListUI();
+ refreshListUI(list.length - 1);
  ev.target.reset();
+ resetSegmented('payerSegmented', 'expName', PEOPLE[0]);
+ resetSegmented('paymentSegmented', 'expPayment', 'เงินสด');
+ resetCurrencyToggle();
  persist();
  });
 
@@ -1926,7 +2092,7 @@ document.getElementById('dayExpensesBtn').addEventListener('click', async () => 
  document.getElementById('reportEntryView').style.display = 'block';
  document.getElementById('reportSummaryView').style.display = 'none';
  document.getElementById('reportModalTitle').innerHTML = '<span class="mi">payments</span> Expenses';
- reportActiveDay = tripData[activeIndex].dayNumber;
+ reportActiveDay = findTodayDayNumber() || tripData[activeIndex].dayNumber;
  document.getElementById('reportEntrySection').innerHTML = `<div class="expense-empty">กำลังโหลด...</div>`;
  await renderReportEntrySection(reportActiveDay);
 });
