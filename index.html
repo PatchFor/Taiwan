@@ -44,7 +44,7 @@
  .mi-outline{font-variation-settings:'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;}
 
  *{box-sizing:border-box;}
- html{overflow-x:hidden;width:100%;}
+ html{overflow-x:hidden;width:100%;scroll-behavior:smooth;}
  body{
  margin:0;
  background:var(--bg);
@@ -54,32 +54,44 @@
  overflow-x:hidden;
  width:100%;
  }
+ :focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:4px;}
+ ::selection{background:var(--primary-soft);color:var(--primary-dark);}
  .wrap{max-width:1160px;margin:0 auto;padding:0 20px 70px;}
  h1,h2,h3,h4{font-family:'Inter','Noto Sans Thai',-apple-system,'Segoe UI',sans-serif;font-weight:700;letter-spacing:-0.01em;}
 
  header.hero{
  position:relative;
  overflow:hidden;
- padding:44px 20px 30px;
+ padding:56px 20px 36px;
  text-align:center;
+ background:radial-gradient(120% 100% at 50% 0%, var(--primary-soft) 0%, var(--bg) 62%);
  }
- .hero-inner{position:relative;z-index:1;}
+ .hero-inner{position:relative;z-index:1;animation:heroIn .5s cubic-bezier(0.2,0,0,1);}
+ @keyframes heroIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
  .eyebrow{
  display:inline-flex;align-items:center;gap:6px;
  background:var(--surface);
- padding:6px 16px;
+ padding:7px 18px;
  border-radius:30px;
- font-size:13px;
+ font-size:12.5px;
+ letter-spacing:0.04em;
  color:var(--primary-dark);
- font-weight:600;
+ font-weight:700;
  box-shadow:var(--shadow-sm);
- margin-bottom:8px;
+ margin-bottom:14px;
  }
  h1.title{
  font-weight:700;
  font-size:clamp(34px,6vw,52px);
  margin:0 0 10px;
  color:var(--ink);
+ letter-spacing:-0.02em;
+ }
+ .hero-sub{
+ margin:0;
+ font-size:15px;
+ color:var(--ink-secondary);
+ font-weight:500;
  }
 
  .day-rail{
@@ -98,11 +110,12 @@
  padding:14px 16px;
  cursor:pointer;
  border:2.5px solid transparent;
- transition:transform .15s ease, border-color .15s ease;
+ transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
  min-width:0;
  }
- .day-pill:hover{transform:translateY(-2px);}
- .day-pill.active{border-color:var(--primary); background:var(--primary-soft);}
+ .day-pill:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+ .day-pill:active{transform:translateY(0);}
+ .day-pill.active{border-color:var(--primary); background:var(--primary-soft);box-shadow:var(--shadow-hover);}
  .day-pill .pill-top{
  display:flex; align-items:center; gap:6px; margin-bottom:4px;
  flex-wrap:wrap;
@@ -155,7 +168,9 @@
  border:1px solid var(--border-light);
  max-width:100%;
  overflow:hidden;
+ animation:cardIn .4s cubic-bezier(0.2,0,0,1);
  }
+ @keyframes cardIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
  .timeline-card{padding:8px 4px 18px;}
  .card-head{
@@ -169,8 +184,11 @@
  background:var(--bg);
  border-radius:18px;
  padding:14px 16px;
- transition:background .15s ease;
+ transition:background .15s ease, box-shadow .15s ease;
+ animation:tlItemIn .35s cubic-bezier(0.2,0,0,1) backwards;
  }
+ .tl-item:hover{box-shadow:0 0 0 1.5px var(--border) inset;}
+ @keyframes tlItemIn{from{opacity:0;transform:translateX(-6px);}to{opacity:1;transform:translateX(0);}}
  .tl-item.tl-stop{
  background:var(--secondary-soft);
  }
@@ -600,7 +618,21 @@
  .bottom-btn-label{font-weight:600;font-size:15px;}
  .bottom-btn-sub{font-size:13px;color:var(--ink-secondary);}
 
- footer{margin-top:44px;text-align:center;font-size:12.5px;color:var(--ink-secondary);font-weight:600;}
+ footer{
+ margin-top:44px;text-align:center;
+ font-size:11.5px;letter-spacing:0.06em;
+ color:var(--ink-secondary);font-weight:700;
+ padding-top:20px;border-top:1px solid var(--border-light);
+ }
+
+ @media (prefers-reduced-motion: reduce){
+ *, *::before, *::after{
+ animation-duration:0.01ms !important;
+ animation-iteration-count:1 !important;
+ transition-duration:0.01ms !important;
+ scroll-behavior:auto !important;
+ }
+ }
 
  /* ---------- Day rail: horizontal scroll on anything narrower than wide desktop ---------- */
  @media (max-width:900px){
@@ -663,26 +695,6 @@
  .notes-card ul{padding-left:16px;}
  }
 
- .bottom-section{margin-top:38px;display:flex;flex-direction:column;gap:12px;}
- .bottom-btn{
- display:flex;align-items:center;gap:16px;
- text-decoration:none;
- background:var(--surface);
- color:var(--ink);
- padding:16px 20px;
- border-radius:var(--radius);
- box-shadow:var(--shadow-sm);
- border:1px solid var(--border-light);
- transition:box-shadow var(--transition), transform var(--transition);
- cursor:pointer;
- font-family:inherit;
- font-size:inherit;
- }
- .bottom-btn:hover{box-shadow:var(--shadow-hover);transform:translateY(-1px);}
- .bottom-btn .mi{font-size:24px;color:var(--primary);}
- .bottom-btn-text{display:flex;flex-direction:column;}
- .bottom-btn-label{font-weight:600;font-size:15px;}
- .bottom-btn-sub{font-size:13px;color:var(--ink-secondary);}
 </style>
 </head>
 <body>
@@ -691,6 +703,7 @@
  <div class="hero-inner">
  <div class="eyebrow"><span class="mi mi-sm">flight</span> TAIWAN TRIP</div>
  <h1 class="title">Taipei 14 &ndash; 18 Oct 2026</h1>
+ <p class="hero-sub">5 days &middot; 3 travelers &middot; Taipei &amp; surroundings</p>
  </div>
 </header>
 
@@ -1298,34 +1311,6 @@ let activeIndex = 0;
 let leafletMap = null;
 let markerLayer = null;
 
-const DAY_ICONS = ['temple_buddhist', 'pets', 'restaurant', 'landscape', 'card_giftcard'];
-
-function stripEmoji(str) {
- return str.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2702}-\u{27B0}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, '').trim();
-}
-
-function transportToIcon(t) {
- if (!t || t === '—') return '<span class="mi mi-sm" style="color:var(--ink-secondary)">remove</span>';
- const lower = t.toLowerCase();
- if (lower.includes('taxi') || lower.includes('แท็กซี่')) return '<span class="mi mi-sm" style="color:var(--secondary)">local_taxi</span>';
- if (lower.includes('mrt') || lower.includes('subway') || lower.includes('สายสี')) return '<span class="mi mi-sm" style="color:var(--secondary)">subway</span>';
- if (lower.includes('tra') || lower.includes('รถไฟ')) return '<span class="mi mi-sm" style="color:var(--secondary)">train</span>';
- if (lower.includes('bus') || lower.includes('รถ')) return '<span class="mi mi-sm" style="color:var(--secondary)">directions_bus</span>';
- if (lower.includes('เครื่องบิน') || lower.includes('flight')) return '<span class="mi mi-sm" style="color:var(--secondary)">flight</span>';
- if (lower.includes('เดิน')) return '<span class="mi mi-sm" style="color:var(--secondary)">directions_walk</span>';
- if (lower.includes('กระเช้า')) return '<span class="mi mi-sm" style="color:var(--secondary)">gondola_lift</span>';
- if (lower.includes('รถราง')) return '<span class="mi mi-sm" style="color:var(--secondary)">tram</span>';
- if (lower.includes('เรือ')) return '<span class="mi mi-sm" style="color:var(--secondary)">rowing</span>';
- if (lower.includes('ถ่ายรูป')) return '<span class="mi mi-sm" style="color:var(--secondary)">photo_camera</span>';
- if (lower.includes('พัก')) return '<span class="mi mi-sm" style="color:var(--secondary)">hotel</span>';
- if (lower.includes('ลงเครื่อง')) return '<span class="mi mi-sm" style="color:var(--secondary)">flight_land</span>';
- if (lower.includes('ห้องน้ำ')) return '<span class="mi mi-sm" style="color:var(--secondary)">wc</span>';
- if (lower.includes('ตั๋ว')) return '<span class="mi mi-sm" style="color:var(--secondary)">confirmation_number</span>';
- if (lower.includes('เช็กอิน') || lower.includes('กระเป๋า') || lower.includes('แพ็ค')) return '<span class="mi mi-sm" style="color:var(--secondary)">luggage</span>';
- if (lower.includes('รถยนต์')) return '<span class="mi mi-sm" style="color:var(--secondary)">directions_car</span>';
- return '<span class="mi mi-sm" style="color:var(--ink-secondary)">more_horiz</span>';
-}
-
 function initLeaflet(){
  leafletMap = L.map('leafletMap', { scrollWheelZoom:false }).setView([25.05, 121.45], 11);
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1422,6 +1407,7 @@ function renderTimeline(day){
  const loc = day.locations.find(l => l.id === row.locId);
  const item = document.createElement('div');
  item.className = 'tl-item' + (row.main ? ' tl-stop' : '');
+ item.style.animationDelay = Math.min(idx * 30, 300) + 'ms';
  const locCell = loc
  ? `<a class="tl-loc-link" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((loc.searchName || loc.name) + ', Taiwan')}&hl=en" target="_blank" rel="noopener" title="${loc.name}"><span class="mi mi-sm">location_on</span> <span class="loc-text">${loc.name}</span></a>`
  : '';
