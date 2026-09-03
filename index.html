@@ -51,7 +51,6 @@
  color:var(--ink);
  font-family:'Inter','Noto Sans Thai',-apple-system,'Segoe UI',sans-serif;
  -webkit-font-smoothing:antialiased;
- overflow-x:hidden;
  width:100%;
  }
  :focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:4px;}
@@ -100,9 +99,22 @@
  gap:12px;
  padding:6px 4px 12px;
  margin-top:-6px;
- position:relative;
- z-index:2;
+ position:sticky;
+ top:0;
+ z-index:50;
+ background:var(--bg);
+ transition:padding var(--transition), box-shadow var(--transition), gap var(--transition);
  }
+ .day-rail.is-stuck{
+ gap:8px;
+ padding:10px 4px;
+ box-shadow:var(--shadow-sm);
+ border-radius:0 0 20px 20px;
+ }
+ .day-rail.is-stuck .day-pill{padding:9px 10px;}
+ .day-rail.is-stuck .day-pill .route{display:none;}
+ .day-rail.is-stuck .day-pill .pill-top{margin-bottom:0;}
+ #dayRailSentinel{height:1px;}
  .day-pill{
  background:var(--surface);
  border-radius:24px;
@@ -672,9 +684,10 @@
  transition:opacity .18s ease, transform .22s cubic-bezier(0.2,0,0,1);
  }
  .fab-wrap.open .fab-item{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
- .fab-wrap.open .fab-item:nth-child(1){transition-delay:.09s;}
- .fab-wrap.open .fab-item:nth-child(2){transition-delay:.05s;}
- .fab-wrap.open .fab-item:nth-child(3){transition-delay:0s;}
+ .fab-wrap.open .fab-item:nth-child(1){transition-delay:.12s;}
+ .fab-wrap.open .fab-item:nth-child(2){transition-delay:.08s;}
+ .fab-wrap.open .fab-item:nth-child(3){transition-delay:.04s;}
+ .fab-wrap.open .fab-item:nth-child(4){transition-delay:0s;}
  .fab-item-label{
  background:var(--ink);color:#fff;
  font-size:13px;font-weight:600;white-space:nowrap;
@@ -804,6 +817,7 @@
 </header>
 
 <div class="wrap">
+ <div id="dayRailSentinel"></div>
  <div class="day-rail" id="dayRail"></div>
 
  <div id="dayContent">
@@ -865,6 +879,10 @@
  <button id="dayExpensesBtn" type="button" class="fab-item">
  <span class="fab-item-label">Expenses</span>
  <span class="fab-item-icon"><span class="mi">payments</span></span>
+ </button>
+ <button id="viewSummaryFabBtn" type="button" class="fab-item">
+ <span class="fab-item-label">Expense Summary</span>
+ <span class="fab-item-icon"><span class="mi">bar_chart</span></span>
  </button>
  </div>
  <button id="fabToggle" type="button" class="fab-toggle" aria-expanded="false" aria-label="Open quick actions menu">
@@ -1880,11 +1898,17 @@ async function renderReportEntrySection(dayNumber){
  const amountInput = document.getElementById('expAmount');
 
  async function updateRateNote(){
- if (selectedCurrency !== 'THB'){ rateNoteEl.textContent = ''; return; }
+ const raw = parseFloat(amountInput.value);
+ if (!raw || raw <= 0){ rateNoteEl.textContent = ''; return; }
  const rate = await getTwdToThbRate();
- rateNoteEl.textContent = rate
- ? `≈ ${rate.toFixed(2)} THB per NT$1 — saved as NT$`
- : 'Fetching exchange rate…';
+ if (!rate){ rateNoteEl.textContent = 'Fetching exchange rate…'; return; }
+ if (selectedCurrency === 'THB'){
+ const ntd = raw / rate;
+ rateNoteEl.textContent = `฿${raw.toLocaleString()} ≈ NT$${ntd.toLocaleString(undefined,{maximumFractionDigits:0})} · saved as NT$`;
+ } else {
+ const thb = raw * rate;
+ rateNoteEl.textContent = `NT$${raw.toLocaleString()} ≈ ฿${thb.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+ }
  }
 
  function resetCurrencyToggle(){
@@ -1893,6 +1917,9 @@ async function renderReportEntrySection(dayNumber){
  amountInput.placeholder = '0';
  rateNoteEl.textContent = '';
  }
+
+ getTwdToThbRate(); // warm the exchange-rate cache early so the live preview responds instantly
+ amountInput.addEventListener('input', updateRateNote);
 
  function resetSegmented(containerId, hiddenInputId, defaultValue){
  const container = document.getElementById(containerId);
@@ -2097,13 +2124,25 @@ document.getElementById('dayExpensesBtn').addEventListener('click', async () => 
  await renderReportEntrySection(reportActiveDay);
 });
 
-document.getElementById('viewReportBtn').addEventListener('click', async () => {
+async function openSummaryView(){
+ const overlay = document.getElementById('reportOverlay');
+ overlay.style.display = 'flex';
  document.getElementById('reportEntryView').style.display = 'none';
  document.getElementById('reportSummaryView').style.display = 'block';
  document.getElementById('reportModalTitle').innerHTML = '<span class="mi">bar_chart</span> Trip Summary Report';
  document.getElementById('reportSummarySection').innerHTML = `<div class="expense-empty">กำลังคำนวณ...</div>`;
+ if (!document.getElementById('expenseForm')){
+ // Opened straight into the summary (e.g. from the FAB) — populate the entry view
+ // in the background too, so "Back" doesn't land on a blank form.
+ reportActiveDay = findTodayDayNumber() || tripData[activeIndex].dayNumber;
+ document.getElementById('reportEntrySection').innerHTML = `<div class="expense-empty">กำลังโหลด...</div>`;
+ renderReportEntrySection(reportActiveDay);
+ }
  await renderReportSummary();
-});
+}
+
+document.getElementById('viewReportBtn').addEventListener('click', openSummaryView);
+document.getElementById('viewSummaryFabBtn').addEventListener('click', openSummaryView);
 
 document.getElementById('backToEntryBtn').addEventListener('click', () => {
  document.getElementById('reportSummaryView').style.display = 'none';
@@ -2224,6 +2263,15 @@ document.getElementById('exportExcelBtn').addEventListener('click', async () => 
 
 try { initLeaflet(); } catch (e) { console.error('initLeaflet failed', e); }
 try { renderAll(); } catch (e) { console.error('renderAll failed', e); }
+
+try {
+ const dayRailEl = document.getElementById('dayRail');
+ const dayRailSentinel = document.getElementById('dayRailSentinel');
+ const stickyObserver = new IntersectionObserver(([entry]) => {
+ dayRailEl.classList.toggle('is-stuck', !entry.isIntersecting);
+ }, { threshold: 0 });
+ stickyObserver.observe(dayRailSentinel);
+} catch (e) { console.error('sticky day-rail observer failed', e); }
 </script>
 </body>
 </html>
