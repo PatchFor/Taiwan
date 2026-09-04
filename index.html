@@ -187,9 +187,26 @@
  border:1px solid var(--border-light);
  max-width:100%;
  overflow:hidden;
+ position:relative;
  animation:cardIn .4s cubic-bezier(0.2,0,0,1);
  }
  @keyframes cardIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+ /* Spotlight hover: a soft glow that follows the cursor, desktop only */
+ .timeline-card::before,
+ .map-card::before{
+ content:"";
+ position:absolute;inset:0;
+ z-index:-1;
+ background:radial-gradient(420px circle at var(--spot-x, 50%) var(--spot-y, 50%), var(--primary-soft), transparent 65%);
+ opacity:0;
+ transition:opacity .3s ease;
+ pointer-events:none;
+ }
+ @media (hover:hover){
+ .timeline-card:hover::before,
+ .map-card:hover::before{opacity:1;}
+ }
 
  .timeline-card{padding:8px 4px 18px;}
  .card-head{
@@ -552,17 +569,54 @@
  font-family:inherit;
  box-shadow:var(--shadow-sm);
  }
+ /* ---------- Summary dashboard: hero stat + bento tiles ---------- */
+ .stat-hero{
+ background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+ color:#fff;
+ border-radius:18px;
+ padding:20px 22px;
+ margin-bottom:16px;
+ box-shadow:var(--shadow);
+ }
+ .stat-hero-label{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;opacity:0.85;}
+ .stat-hero-value{font-size:32px;font-weight:800;letter-spacing:-0.02em;margin:4px 0 2px;font-variant-numeric:tabular-nums;}
+ .stat-hero-sub{font-size:12px;opacity:0.85;}
+ .stat-hero-split{
+ margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);
+ display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;
+ }
+ .stat-hero-split b{font-size:14px;}
+
+ .stat-section-label{
+ font-size:11px;font-weight:700;color:var(--ink-secondary);
+ text-transform:uppercase;letter-spacing:0.05em;
+ margin:0 0 8px;
+ }
+
+ .stat-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;margin-bottom:18px;}
+ @media (max-width:480px){ .stat-grid{grid-template-columns:1fr;} }
+ .stat-tile{background:var(--bg);border-radius:16px;padding:14px;}
+ .stat-tile-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+ .stat-tile-avatar{
+ width:24px;height:24px;border-radius:50%;flex:0 0 auto;
+ background:var(--primary-soft);color:var(--primary-dark);
+ display:flex;align-items:center;justify-content:center;
+ font-size:11px;font-weight:800;
+ }
+ .stat-tile-name{font-weight:700;font-size:13px;color:var(--ink);}
+ .stat-tile-value{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2;}
+ .stat-tile-value.is-get{color:var(--secondary-dark);}
+ .stat-tile-value.is-owe{color:var(--primary-dark);}
+ .stat-tile-paid{font-size:11px;color:var(--ink-secondary);margin-top:2px;}
+ .stat-tile-bar-track{height:5px;border-radius:3px;background:var(--border-light);overflow:hidden;margin-top:8px;}
+ .stat-tile-bar{height:100%;border-radius:3px;}
+ .stat-tile-bar.bar-get{background:var(--secondary);}
+ .stat-tile-bar.bar-owe{background:var(--primary);}
+
  .report-daybreakdown{
  background:var(--bg);border-radius:14px;padding:6px 14px;margin-bottom:4px;
  }
  .report-day-date{color:var(--ink-secondary);font-weight:400;font-size:11.5px;}
- .report-people-grid{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
- .report-person-bar-track{
- height:8px;border-radius:5px;background:var(--border-light);overflow:hidden;margin:6px 0;
- }
- .report-person-bar{height:100%;border-radius:5px;}
- .report-person-bar.bar-get{background:var(--secondary);}
- .report-person-bar.bar-owe{background:var(--primary);}
 
  .expense-status{
  grid-column:1 / -1;
@@ -603,28 +657,6 @@
  display:flex;justify-content:space-between;
  font-size:13.5px;padding:6px 0;color:var(--ink);
  }
- .report-total-row{
- display:flex;justify-content:space-between;
- font-weight:700;font-size:15px;
- padding:10px 0;margin-top:6px;
- border-top:1.5px solid var(--border);
- color:var(--ink);
- }
- .report-split-row{
- display:flex;justify-content:space-between;
- font-size:13.5px;color:var(--ink-secondary);padding:2px 0 10px;
- }
- .report-person-card{
- background:var(--bg);
- border-radius:14px;
- padding:12px 14px;
- margin-bottom:8px;
- }
- .report-person-name{font-weight:700;color:var(--ink);font-size:14px;margin-bottom:4px;}
- .report-person-line{font-size:12.5px;color:var(--ink);}
- .report-person-diff{font-weight:700;margin-top:4px;font-size:13.5px;}
- .report-diff-owe{color:var(--primary-dark);}
- .report-diff-get{color:var(--secondary-dark);}
  .notes-card ul{margin:0;padding-left:20px;}
  .notes-card li{margin-bottom:8px;font-size:13px;line-height:1.6;color:var(--ink);}
  .notes-card li:last-child{margin-bottom:0;}
@@ -2108,8 +2140,43 @@ async function renderReportSummary(){
  });
  const maxPaid = Math.max(perPersonShare, ...Object.values(paidByPerson), 1);
 
+ const rate = await getTwdToThbRate();
+ const toTHB = ntd => rate ? Math.round(ntd * rate).toLocaleString() : null;
+ const grandTHB = toTHB(grandTotal);
+
+ // ---- Hero stat: grand total ----
+ let html = `
+ <div class="stat-hero">
+ <div class="stat-hero-label">Total spent</div>
+ <div class="stat-hero-value">${grandTotal.toLocaleString()} NT$</div>
+ <div class="stat-hero-sub">${grandTHB ? `≈ ${grandTHB} บาท` : 'Exchange rate unavailable'}</div>
+ <div class="stat-hero-split"><span>Split ${PEOPLE.length} ways</span><b>${perPersonShare.toLocaleString(undefined,{maximumFractionDigits:0})} NT$ each</b></div>
+ </div>
+ `;
+
+ // ---- Per-person stat tiles ----
+ html += `<div class="stat-section-label">By Person</div>`;
+ html += `<div class="stat-grid">` + Object.keys(paidByPerson).map(name => {
+ const paid = paidByPerson[name];
+ const diff = paid - perPersonShare;
+ const barPct = Math.min(100, (paid / maxPaid) * 100);
+ const isGet = diff >= 0;
+ return `
+ <div class="stat-tile">
+ <div class="stat-tile-head">
+ <div class="stat-tile-avatar">${name.slice(0,1).toUpperCase()}</div>
+ <div class="stat-tile-name">${name}</div>
+ </div>
+ <div class="stat-tile-value ${isGet ? 'is-get' : 'is-owe'}">${isGet ? '+' : '−'}${Math.abs(diff).toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+ <div class="stat-tile-paid">${isGet ? 'gets back' : 'owes'} · paid ${paid.toLocaleString()} NT$</div>
+ <div class="stat-tile-bar-track"><div class="stat-tile-bar ${isGet ? 'bar-get' : 'bar-owe'}" style="width:${barPct}%"></div></div>
+ </div>
+ `;
+ }).join('') + `</div>`;
+
  // ---- Per-day breakdown, including who paid what within that day ----
- let html = `<div class="report-daybreakdown">`;
+ html += `<div class="stat-section-label">Daily Breakdown</div>`;
+ html += `<div class="report-daybreakdown">`;
  html += tripData.map((d, i) => {
  const byPersonThisDay = {};
  allLists[i].forEach(e => { byPersonThisDay[e.name] = (byPersonThisDay[e.name] || 0) + Number(e.amount || 0); });
@@ -2126,28 +2193,6 @@ async function renderReportSummary(){
  }).join('');
  html += `</div>`;
 
- html += `
- <div class="report-total-row"><span>รวมทั้งทริป</span><span>${grandTotal.toLocaleString()} NT$</span></div>
- <div class="report-split-row"><span>หาร ${PEOPLE.length} คน คนละ</span><span>${perPersonShare.toLocaleString(undefined,{maximumFractionDigits:0})} NT$</span></div>
- `;
-
- html += `<div class="report-people-grid">` + Object.keys(paidByPerson).map(name => {
- const paid = paidByPerson[name];
- const diff = paid - perPersonShare;
- const barPct = Math.min(100, (paid / maxPaid) * 100);
- const diffText = diff >= 0
- ? `<span class="report-diff-get"><span class="mi mi-sm">check_circle</span> Gets back ${diff.toLocaleString(undefined,{maximumFractionDigits:0})} NT$</span>`
- : `<span class="report-diff-owe"><span class="mi mi-sm">warning</span> Owes ${Math.abs(diff).toLocaleString(undefined,{maximumFractionDigits:0})} NT$</span>`;
- return `
- <div class="report-person-card">
- <div class="report-person-name">${name}</div>
- <div class="report-person-bar-track"><div class="report-person-bar ${diff >= 0 ? 'bar-get' : 'bar-owe'}" style="width:${barPct}%"></div></div>
- <div class="report-person-line">จ่ายไปแล้ว ${paid.toLocaleString()} NT$ (ทั้งทริป)</div>
- <div class="report-person-diff">${diffText}</div>
- </div>
- `;
- }).join('') + `</div>`;
-
  // ---- Settlement statement: minimal transfers so everyone ends up even ----
  const balances = PEOPLE.map(name => ({ name, diff: paidByPerson[name] - perPersonShare }));
  const creditors = balances.filter(b => b.diff > 0.5).sort((a,b) => b.diff - a.diff).map(b => ({...b}));
@@ -2163,8 +2208,6 @@ async function renderReportSummary(){
  if (debtors[di].diff > -0.5) di++;
  }
 
- const rate = await getTwdToThbRate();
- const toTHB = ntd => rate ? Math.round(ntd * rate).toLocaleString() : null;
  const rateNote = rate
  ? `<span class="fx-note">(1 NT$ ≈ ${rate.toFixed(2)} บาท)</span>`
  : `<span class="fx-note">(ดึงอัตราแลกเปลี่ยนไม่สำเร็จ)</span>`;
@@ -2179,7 +2222,6 @@ async function renderReportSummary(){
  html += `<div class="settlement-line"><span class="mi mi-sm">payments</span> <b>${t.from}</b> ต้องจ่ายให้ <b>${t.to}</b> <b>${Math.round(t.amt).toLocaleString()} NT$</b>${thb ? ` <span class="fx-thb">(≈ ${thb} บาท)</span>` : ''}</div>`;
  });
  }
- const grandTHB = toTHB(grandTotal);
  html += `<div class="settlement-line settlement-summary-line">รวมทั้งทริปใช้ไป <b>${grandTotal.toLocaleString()} NT$</b>${grandTHB ? ` <span class="fx-thb">(≈ ${grandTHB} บาท)</span>` : ''} เฉลี่ยคนละ <b>${perPersonShare.toLocaleString(undefined,{maximumFractionDigits:0})} NT$</b></div>`;
  html += `<div class="settlement-line fx-note">${rateNote}</div>`;
  html += `</div>`;
@@ -2358,6 +2400,19 @@ try {
  document.fonts.ready.then(() => setTimeout(refreshMapSize, 100));
  }
 } catch (e) { console.error('map invalidateSize wiring failed', e); }
+
+// Spotlight hover: track the cursor position on the two main cards (desktop only)
+try {
+ if (window.matchMedia('(hover: hover)').matches){
+ document.querySelectorAll('.timeline-card, .map-card').forEach(card => {
+ card.addEventListener('mousemove', (ev) => {
+ const rect = card.getBoundingClientRect();
+ card.style.setProperty('--spot-x', ((ev.clientX - rect.left) / rect.width * 100) + '%');
+ card.style.setProperty('--spot-y', ((ev.clientY - rect.top) / rect.height * 100) + '%');
+ });
+ });
+ }
+} catch (e) { console.error('spotlight hover wiring failed', e); }
 
 try {
  const dayRailEl = document.getElementById('dayRail');
