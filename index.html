@@ -61,9 +61,18 @@
  header.hero{
  position:relative;
  overflow:hidden;
- padding:56px 20px 36px;
+ padding:56px 20px 76px;
  text-align:center;
- background:radial-gradient(120% 100% at 50% 0%, var(--primary-soft) 0%, var(--bg) 62%);
+ background:
+ radial-gradient(75% 60% at 12% 0%, var(--secondary-soft) 0%, transparent 55%),
+ radial-gradient(120% 100% at 50% 0%, var(--primary-soft) 0%, var(--bg) 62%);
+ }
+ .hero-skyline{
+ position:absolute;left:0;right:0;bottom:0;
+ width:100%;height:100px;
+ fill:var(--primary);
+ opacity:0.09;
+ pointer-events:none;
  }
  .hero-inner{position:relative;z-index:1;animation:heroIn .5s cubic-bezier(0.2,0,0,1);}
  @keyframes heroIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
@@ -92,6 +101,18 @@
  color:var(--ink-secondary);
  font-weight:500;
  }
+ .hero-countdown{
+ display:inline-flex;align-items:center;gap:6px;
+ margin-top:16px;
+ background:var(--surface);
+ padding:7px 18px;
+ border-radius:20px;
+ font-size:12.5px;font-weight:700;
+ color:var(--secondary-dark);
+ box-shadow:var(--shadow-sm);
+ animation:countdownPulse 2.6s ease-in-out infinite;
+ }
+ @keyframes countdownPulse{0%,100%{box-shadow:var(--shadow-sm);}50%{box-shadow:0 6px 18px rgba(0,166,153,0.28);}}
 
  .day-rail{
  display:grid;
@@ -828,9 +849,11 @@
  /* ---------- Mobile responsive ---------- */
  @media (max-width:640px){
  .wrap{padding:0 14px 50px;}
- header.hero{padding:34px 14px 22px;}
+ header.hero{padding:34px 14px 56px;}
+ .hero-skyline{height:64px;}
  .eyebrow{font-size:11.5px;padding:5px 12px;}
  h1.title{font-size:clamp(28px,9vw,38px);}
+ .hero-countdown{font-size:11.5px;padding:6px 14px;margin-top:12px;}
 
  .day-rail{margin-top:-4px;gap:6px;}
  .day-pill{padding:8px 3px;}
@@ -869,10 +892,47 @@
 <body>
 
 <header class="hero">
+ <svg class="hero-skyline" viewBox="0 0 1200 160" preserveAspectRatio="none" aria-hidden="true">
+ <rect x="10" y="110" width="35" height="50"/>
+ <rect x="55" y="90" width="28" height="70"/>
+ <rect x="95" y="120" width="32" height="40"/>
+ <rect x="140" y="75" width="24" height="85"/>
+ <rect x="175" y="100" width="40" height="60"/>
+ <rect x="230" y="130" width="26" height="30"/>
+ <rect x="270" y="95" width="30" height="65"/>
+ <rect x="315" y="115" width="22" height="45"/>
+ <rect x="350" y="85" width="34" height="75"/>
+ <rect x="400" y="105" width="28" height="55"/>
+ <rect x="440" y="70" width="20" height="90"/>
+ <rect x="475" y="120" width="30" height="40"/>
+ <rect x="570" y="145" width="60" height="15"/>
+ <rect x="571.5" y="130" width="57" height="15"/>
+ <rect x="573" y="115" width="54" height="15"/>
+ <rect x="574.5" y="100" width="51" height="15"/>
+ <rect x="576" y="85" width="48" height="15"/>
+ <rect x="577.5" y="70" width="45" height="15"/>
+ <rect x="579" y="55" width="42" height="15"/>
+ <rect x="580.5" y="40" width="39" height="15"/>
+ <rect x="598" y="10" width="4" height="30"/>
+ <rect x="700" y="120" width="30" height="40"/>
+ <rect x="740" y="90" width="26" height="70"/>
+ <rect x="775" y="110" width="35" height="50"/>
+ <rect x="820" y="75" width="22" height="85"/>
+ <rect x="855" y="100" width="40" height="60"/>
+ <rect x="905" y="125" width="28" height="35"/>
+ <rect x="945" y="95" width="30" height="65"/>
+ <rect x="985" y="115" width="24" height="45"/>
+ <rect x="1020" y="80" width="32" height="80"/>
+ <rect x="1065" y="105" width="26" height="55"/>
+ <rect x="1100" y="70" width="20" height="90"/>
+ <rect x="1135" y="120" width="30" height="40"/>
+ <rect x="1175" y="100" width="18" height="60"/>
+ </svg>
  <div class="hero-inner">
  <div class="eyebrow"><span class="mi mi-sm">flight</span> TAIWAN TRIP</div>
  <h1 class="title">Taipei 14 &ndash; 18 Oct 2026</h1>
  <p class="hero-sub">5 days &middot; 3 travelers &middot; Taipei &amp; surroundings</p>
+ <div class="hero-countdown" id="heroCountdown"></div>
  </div>
 </header>
 
@@ -1768,6 +1828,26 @@ function findTodayDayNumber(){
  return match ? match.dayNumber : null;
 }
 
+function renderHeroCountdown(){
+ const el = document.getElementById('heroCountdown');
+ if (!el) return;
+ const msPerDay = 24 * 60 * 60 * 1000;
+ const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+ const tripStart = startOfDay(new Date(tripData[0].date + 'T00:00:00'));
+ const tripEnd = startOfDay(new Date(tripData[tripData.length - 1].date + 'T00:00:00'));
+ const today = startOfDay(new Date());
+
+ if (today < tripStart){
+ const days = Math.round((tripStart - today) / msPerDay);
+ el.innerHTML = `<span class="mi mi-sm">schedule</span> ${days} day${days === 1 ? '' : 's'} until departure`;
+ } else if (today <= tripEnd){
+ const dayNum = Math.round((today - tripStart) / msPerDay) + 1;
+ el.innerHTML = `<span class="mi mi-sm">celebration</span> Day ${dayNum} of ${tripData.length} — enjoy the trip!`;
+ } else {
+ el.innerHTML = `<span class="mi mi-sm">task_alt</span> Trip completed`;
+ }
+}
+
 /* ================= Expense tracker (shared storage, all inside the Report modal) ================= */
 
 const PEOPLE = ['AM', 'For', 'Arm'];
@@ -2388,6 +2468,7 @@ document.getElementById('exportExcelBtn').addEventListener('click', async () => 
 
 try { initLeaflet(); } catch (e) { console.error('initLeaflet failed', e); }
 try { renderAll(); } catch (e) { console.error('renderAll failed', e); }
+try { renderHeroCountdown(); } catch (e) { console.error('renderHeroCountdown failed', e); }
 
 // Leaflet measures its container on init; if that happens before web fonts finish
 // loading (which can reflow card heights) or before the page has fully laid out,
