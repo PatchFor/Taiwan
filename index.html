@@ -192,6 +192,16 @@
  background:var(--primary-soft);
  padding:4px 12px;border-radius:20px;
  }
+ .weather-chip{
+ display:inline-flex;align-items:center;gap:6px;
+ background:var(--secondary-soft);color:var(--secondary-dark);
+ font-size:12.5px;font-weight:700;
+ padding:6px 14px;border-radius:20px;
+ white-space:nowrap;
+ }
+ .weather-chip:empty{display:none;}
+ .weather-chip .mi{font-size:18px;}
+ .weather-chip-note{font-weight:600;color:var(--ink-secondary);font-size:10.5px;margin-left:1px;}
 
  .grid{
  display:grid;
@@ -864,6 +874,7 @@
  .section-title{flex-wrap:wrap;margin:24px 0 12px;gap:8px;}
  .section-title h2{font-size:19px;line-height:1.35;}
  .section-title .date-chip{font-size:11px;padding:3px 10px;}
+ .weather-chip{font-size:11px;padding:5px 12px;}
 
  .card-head{font-size:13px;padding:14px 16px 6px;}
  .tl-list{padding:0 10px;gap:8px;}
@@ -942,6 +953,7 @@
  <div id="dayContent">
  <div class="section-title">
  <h2 id="dayTitle"></h2>
+ <div class="weather-chip" id="weatherChip"></div>
  </div>
 
  <div class="grid">
@@ -1789,11 +1801,130 @@ function renderNotes(day){
  `;
 }
 
+/* ================= Weather (free, keyless Open-Meteo API) ================= */
+const TAIPEI_LAT = 25.0330;
+const TAIPEI_LON = 121.5654;
+
+const WEATHER_CODE_MAP = {
+ 0: { icon: 'sunny', label: 'Clear sky' },
+ 1: { icon: 'partly_cloudy_day', label: 'Mainly clear' },
+ 2: { icon: 'partly_cloudy_day', label: 'Partly cloudy' },
+ 3: { icon: 'cloud', label: 'Overcast' },
+ 45: { icon: 'foggy', label: 'Fog' },
+ 48: { icon: 'foggy', label: 'Fog' },
+ 51: { icon: 'rainy', label: 'Light drizzle' },
+ 53: { icon: 'rainy', label: 'Drizzle' },
+ 55: { icon: 'rainy', label: 'Heavy drizzle' },
+ 61: { icon: 'rainy', label: 'Light rain' },
+ 63: { icon: 'rainy', label: 'Rain' },
+ 65: { icon: 'rainy', label: 'Heavy rain' },
+ 71: { icon: 'ac_unit', label: 'Light snow' },
+ 73: { icon: 'ac_unit', label: 'Snow' },
+ 75: { icon: 'ac_unit', label: 'Heavy snow' },
+ 80: { icon: 'rainy', label: 'Rain showers' },
+ 81: { icon: 'rainy', label: 'Rain showers' },
+ 82: { icon: 'rainy', label: 'Violent showers' },
+ 95: { icon: 'thunderstorm', label: 'Thunderstorm' },
+ 96: { icon: 'thunderstorm', label: 'Thunderstorm' },
+ 99: { icon: 'thunderstorm', label: 'Thunderstorm' },
+};
+function weatherCodeInfo(code){
+ return WEATHER_CODE_MAP[code] || { icon: 'thermostat', label: 'Weather' };
+}
+
+const tripWeather = {}; // date string -> { max, min, code, isForecast }
+
+async function loadTripWeather(){
+ const msPerDay = 24 * 60 * 60 * 1000;
+ const today = new Date(); today.setHours(0, 0, 0, 0);
+ const dates = tripData.map(d => d.date);
+ const startDate = dates[0];
+ const endDate = dates[dates.length - 1];
+ const daysUntilEnd = Math.round((new Date(endDate + 'T00:00:00') - today) / msPerDay);
+
+ try {
+ if (daysUntilEnd >= -1 && daysUntilEnd <= 16){
+ // Within Open-Meteo's live forecast window — use the real forecast.
+ const url = `https://api.open-meteo.com/v1/forecast?latitude=${TAIPEI_LAT}&longitude=${TAIPEI_LON}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTaipei&start_date=${startDate}&end_date=${endDate}`;
+ const res = await fetch(url);
+ const data = await res.json();
+ if (data && data.daily && data.daily.time){
+ data.daily.time.forEach((date, i) => {
+ tripWeather[date] = {
+ max: data.daily.temperature_2m_max[i],
+ min: data.daily.temperature_2m_min[i],
+ code: data.daily.weathercode[i],
+ isForecast: true,
+ };
+ });
+ }
+ } else {
+ // Trip is too far out for a live forecast — average the same calendar dates
+ // from the past 3 complete years as a "typical weather" estimate instead.
+ const thisYear = today.getFullYear();
+ const perDateSamples = {};
+ for (const year of [thisYear - 1, thisYear - 2, thisYear - 3]){
+ const yStart = String(year) + startDate.slice(4);
+ const yEnd = String(year) + endDate.slice(4);
+ try {
+ const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${TAIPEI_LAT}&longitude=${TAIPEI_LON}&start_date=${yStart}&end_date=${yEnd}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTaipei`;
+ const res = await fetch(url);
+ const data = await res.json();
+ if (data && data.daily && data.daily.time){
+ data.daily.time.forEach((date, i) => {
+ const mmdd = date.slice(5);
+ if (!perDateSamples[mmdd]) perDateSamples[mmdd] = [];
+ perDateSamples[mmdd].push({
+ max: data.daily.temperature_2m_max[i],
+ min: data.daily.temperature_2m_min[i],
+ code: data.daily.weathercode[i],
+ });
+ });
+ }
+ } catch (e) { console.error('historical weather fetch failed for', year, e); }
+ }
+ const avg = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
+ dates.forEach(date => {
+ const samples = perDateSamples[date.slice(5)];
+ if (!samples || !samples.length) return;
+ const codeCounts = {};
+ samples.forEach(s => { codeCounts[s.code] = (codeCounts[s.code] || 0) + 1; });
+ const modeCode = Number(Object.keys(codeCounts).sort((a, b) => codeCounts[b] - codeCounts[a])[0]);
+ tripWeather[date] = {
+ max: Math.round(avg(samples.map(s => s.max))),
+ min: Math.round(avg(samples.map(s => s.min))),
+ code: modeCode,
+ isForecast: false,
+ };
+ });
+ }
+ } catch (e) {
+ console.error('weather fetch failed', e);
+ }
+ renderWeatherChip(tripData[activeIndex]);
+}
+
+function renderWeatherChip(day){
+ const el = document.getElementById('weatherChip');
+ if (!el) return;
+ const w = tripWeather[day.date];
+ if (!w){ el.innerHTML = ''; return; }
+ const info = weatherCodeInfo(w.code);
+ el.innerHTML = `
+ <span class="mi mi-sm">${info.icon}</span>
+ ${Math.round(w.max)}&deg;/${Math.round(w.min)}&deg;C &middot; ${info.label}
+ ${w.isForecast ? '' : '<span class="weather-chip-note">(typical, 3-yr avg)</span>'}
+ `;
+}
+
 function renderDayContent(day){
  document.getElementById('dayTitle').textContent = `Day ${day.dayNumber} · ${stripEmoji(day.title)}`;
- renderTimeline(day);
- renderMap(day);
- renderNotes(day);
+ // Each step runs independently so one failing (e.g. the map, if Leaflet didn't load)
+ // never blocks the rest — like the weather chip — from updating.
+ try { renderTimeline(day); } catch (e) { console.error('renderTimeline failed', e); }
+ try { renderMap(day); } catch (e) { console.error('renderMap failed', e); }
+ try { renderNotes(day); } catch (e) { console.error('renderNotes failed', e); }
+ renderWeatherChip(day);
  document.getElementById('pageFooter').textContent = `DAY ${day.dayNumber} OF ${tripData.length}`;
 }
 
@@ -2469,6 +2600,7 @@ document.getElementById('exportExcelBtn').addEventListener('click', async () => 
 try { initLeaflet(); } catch (e) { console.error('initLeaflet failed', e); }
 try { renderAll(); } catch (e) { console.error('renderAll failed', e); }
 try { renderHeroCountdown(); } catch (e) { console.error('renderHeroCountdown failed', e); }
+loadTripWeather().catch(e => console.error('loadTripWeather failed', e));
 
 // Leaflet measures its container on init; if that happens before web fonts finish
 // loading (which can reflow card heights) or before the page has fully laid out,
